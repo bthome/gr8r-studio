@@ -1405,21 +1405,6 @@ A.delProject = el => {
   });
 };
 A.requestAccess = () => {};
-A.invite = () => {};
-A.submitInvite = () => {};
-A.resendInvite = () => {};
-A.doLogin = () => {};
-A.doSignup = () => {};
-A.socialAuth = () => {};
-A.savePassword = () => {};
-A.setup2fa = () => {};
-A.verify2fa = () => {};
-A.disable2fa = () => {};
-A.changePlan = () => {};
-  const p = proj(el.dataset.id);
-  toast(`Access requested. We'll notify you when ${mem(p?.lead)?.name || 'the owner'} responds.`);
-};
-
 /* sharing & invites */
 A.share = el => {
   const id = el.dataset.id || curProjectId();
@@ -1441,47 +1426,7 @@ A.shareAdd = el => {
   render();
   toast(`${m.name} can now edit ${p.name}`);
 };
-A.shareInvite = () => {
-  const m = S.ui.modals[S.ui.modals.length - 1];
-  const p = proj(m.id);
-  const v = ($('#share-in')?.value || '').trim();
-  const perm = $('#share-perm')?.value;
-  if (!v) {
-    $('#share-in')?.focus();
-    return;
-  }
-  const ex = D().members.find(x => x.email.toLowerCase() === v.toLowerCase() || x.name.toLowerCase() === v.toLowerCase());
-  if (ex) {
-    if (!p.members.includes(ex.id))
-      mutate(() => {
-        p.members.push(ex.id);
-        p.perms = p.perms || {};
-        p.perms[ex.id] = perm;
-      });
-    S.ui.shareQ = '';
-    render();
-    toast(`Shared with ${ex.name}`);
-    return;
-  }
-  if (!/^\S+@\S+\.\S+$/.test(v)) {
-    toast('Enter a valid email address, like name@company.com', { kind: 'err' });
-    return;
-  }
-  const nm = v
-    .split('@')[0]
-    .replace(/[._-]+/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
-  mutate(() => {
-    const id = uid('m');
-    D().members.push({ id, name: nm, email: v, role: 'Guest', team: p.team, title: 'Guest', c: '#6B7280', status: 'invited', last: null, tz: '—' });
-    p.members.push(id);
-    p.perms = p.perms || {};
-    p.perms[id] = perm;
-  });
-  S.ui.shareQ = '';
-  render();
-  toast(`Invitation sent to ${v}`);
-};
+A.shareInvite = () => {};
 IN.sharePerm = el => {
   const p = proj(el.dataset.id);
   const mid = el.dataset.mid;
@@ -1505,68 +1450,10 @@ IN.shareAccess = el => {
     p.access = el.value;
   });
 };
-A.invite = () => {
-  S.ui.inviteDraft = '';
-  S.ui.errors = {};
-  S.ui.pop = null;
-  openModal({ type: 'invite' });
-};
-A.submitInvite = () => {
-  const raw = $('#inv-emails').value;
-  S.ui.inviteDraft = raw;
-  const role = $('#inv-role').value;
-  const team = $('#inv-team').value;
-  const list = raw
-    .split(/[\s,;]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-  const bad = list.filter(e => !/^\S+@\S+\.\S+$/.test(e));
-  if (!list.length) {
-    S.ui.errors.invite = 'Enter at least one email address';
-    render();
-    return;
-  }
-  if (bad.length) {
-    S.ui.errors.invite = `${bad[0]} isn't a valid email address`;
-    render();
-    return;
-  }
-  loadingBtn('inv-submit', 600, () => {
-    if (
-      !mutate(() =>
-        list.forEach(e => {
-          if (!D().members.some(m => m.email === e))
-            D().members.push({
-              id: uid('m'),
-              name: e
-                .split('@')[0]
-                .replace(/[._-]+/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase()),
-              email: e,
-              role,
-              team,
-              title: role,
-              c: '#6B7280',
-              status: 'invited',
-              last: null,
-              tz: '—',
-            });
-        }),
-      )
-    )
-      return;
-    S.ui.modals.pop();
-    S.ui.errors = {};
-    render();
-    toast(`${list.length} invitation${list.length > 1 ? 's' : ''} sent`);
-  });
-};
-A.copyInviteLink = () => copy(`https://gr8rstudio.com/join/${D().ws.url}-7f3k2`, 'Invite link copied');
-A.resendInvite = el => {
-  S.ui.pop = null;
-  render();
-  toast(`Invite resent to ${mem(el.dataset.id).email}`);
-};
+A.invite = () => {};
+A.submitInvite = () => {};
+A.copyInviteLink = () => {};
+A.resendInvite = () => {};
 A.viewProfile = el => go('member', { id: el.dataset.id });
 A.assignToMember = el => {
   S.ui.pop = null;
@@ -1987,100 +1874,17 @@ IN.pwStrength = el => {
   if (m) m.replaceWith(tmp.firstElementChild || document.createTextNode(''));
   else if (tmp.firstElementChild) el.after(tmp.firstElementChild);
 };
-A.savePassword = () => {
-  const e = (S.ui.errors = {});
-  const cur = $('#pw-cur').value,
-    nw = $('#pw-new').value,
-    cf = $('#pw-conf').value;
-  S.ui.pwDone = false;
-  if (!cur) e.pwCur = 'Enter your current password';
-  if (nw.length < 10 || !/[0-9\W]/.test(nw)) e.pwNew = 'Use at least 10 characters, including a number or symbol';
-  if (nw !== cf) e.pwConf = "Passwords don't match";
-  if (Object.keys(e).length) {
-    render();
-    return;
-  }
-  loadingBtn('pw-save', 800, () => {
-    S.ui.pwDone = true;
-    S.ui.pwNew = '';
-    render();
-    toast('Password updated');
-  });
-};
-A.revokeSession = el => {
-  mutate(() => {
-    D().sessions = D().sessions.filter(s => s.id !== el.dataset.id);
-  });
-  toast('Session signed out');
-};
-A.revokeAll = () =>
-  confirmDlg({
-    title: 'Sign out of all other sessions?',
-    body: "You'll stay signed in on this device. Other devices will need to sign in again.",
-    ok: 'Sign out others',
-    danger: true,
-    icon: 'log-out',
-    run: () => {
-      mutate(() => {
-        D().sessions = D().sessions.filter(s => s.cur);
-      });
-      toast('Signed out of other sessions');
-    },
-  });
-A.setup2fa = () => {
-  S.ui.tfaSetup = true;
-  S.ui.errors = {};
-  render();
-};
+A.savePassword = () => {};
+A.revokeSession = () => {};
+A.revokeAll = () => {};
+A.setup2fa = () => {};
 A.cancel2fa = () => {
   S.ui.tfaSetup = false;
   render();
 };
-A.verify2fa = () => {
-  const v = $('#tfa-code').value.trim();
-  if (!/^\d{6}$/.test(v)) {
-    S.ui.errors.tfa = 'Enter the 6-digit code from your app';
-    render();
-    return;
-  }
-  S.ui.errors = {};
-  mutate(() => {
-    D().tfa = true;
-    S.ui.tfaSetup = false;
-  });
-  toast('Two-factor authentication enabled');
-};
-A.disable2fa = () =>
-  confirmDlg({
-    title: 'Turn off two-factor authentication?',
-    body: 'Your account will be protected by your password only.',
-    ok: 'Turn off',
-    danger: true,
-    icon: 'shield-off',
-    run: () => {
-      mutate(() => {
-        D().tfa = false;
-      });
-      toast('Two-factor authentication turned off');
-    },
-  });
-A.changePlan = el => {
-  const v = el.dataset.v;
-  const price = { Free: 0, Team: 12, Business: 24 }[v];
-  confirmDlg({
-    title: `${v === 'Free' ? 'Downgrade' : 'Upgrade'} to ${v}?`,
-    body: `${D().members.length} members × $${price}/month = <b>$${D().members.length * price}/month</b>, prorated from today and billed to Visa ending 4242.`,
-    ok: v === 'Free' ? 'Downgrade' : `Upgrade to ${v}`,
-    icon: 'gem',
-    run: () => {
-      mutate(() => {
-        D().plan = v;
-      });
-      toast(`You're now on the ${v} plan`);
-    },
-  });
-};
-
+A.verify2fa = () => {};
+A.disable2fa = () => {};
+A.changePlan = () => {};
 /* auth */
 A.auth = el => {
   S.ui.auth = el.dataset.v;
@@ -2106,47 +1910,9 @@ export function enterApp(msg) {
   go(S.prefs.home || 'home');
   toast(msg);
 }
-A.doLogin = () => {
-  const e = (S.ui.errors = {});
-  const em = $('#l-email').value.trim(),
-    pw = $('#l-pw').value;
-  S.ui.af.email = em;
-  if (!em) e.email = 'Enter your email address';
-  else if (!EMAIL_RE.test(em)) e.email = 'Enter a valid email, like name@company.com';
-  if (!pw) e.pw = 'Enter your password';
-  if (Object.keys(e).length) {
-    render();
-    (e.email ? $('#l-email') : $('#l-pw'))?.focus();
-    if (!e.email) $('#l-pw').value = pw;
-    return;
-  }
-  loadingBtn('login-btn', 750, () => enterApp(`Signed in as ${em}`));
-};
-A.socialAuth = el => {
-  el.classList.add('is-loading');
-  setTimeout(() => enterApp(`Signed in with ${el.dataset.v}`), 800);
-};
-A.doSignup = () => {
-  const e = (S.ui.errors = {});
-  const nm = $('#s-name').value.trim(),
-    em = $('#s-email').value.trim(),
-    pw = $('#s-pw').value;
-  S.ui.af.name = nm;
-  S.ui.af.email = em;
-  if (!nm) e.name = 'Enter your name';
-  if (!EMAIL_RE.test(em)) e.email = 'Enter a valid work email';
-  if (pw.length < 10 || !/[0-9\W]/.test(pw)) e.pw = 'Use at least 10 characters, including a number or symbol';
-  if (Object.keys(e).length) {
-    render();
-    $('#s-email').value = em;
-    return;
-  }
-  loadingBtn('signup-btn', 800, () => {
-    S.ui.auth = 'verify';
-    startResend();
-    render();
-  });
-};
+A.doLogin = () => {};
+A.socialAuth = () => {};
+A.doSignup = () => {};
 export function startResend() {
   S.ui.resendT = 30;
   clearInterval(startResend._i);
