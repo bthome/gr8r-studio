@@ -56,6 +56,12 @@ gr8r-axi file add --as fm --project PAY --task PAY-201 --path ./patch.diff --nam
 
 `--name` is optional. Without it, the original file name is used after the id.
 
+## Rules that are gone
+
+There is no email, no invite, no login, and no billing. Do not toast "sent". Add a member with AXI. Signals are the inbox: review waiting, unlinked, stalled.
+
+## End of day
+
 ```
 gr8r-axi doctor
 ```
