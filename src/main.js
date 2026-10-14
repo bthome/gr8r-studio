@@ -73,6 +73,16 @@ import { ROUTE_NAMES, render, go } from './shell/render.js';
   else if (h && ROUTE_NAMES[h]) S.ui.route = h;
   else S.ui.route = S.prefs.home || 'home';
   render();
+  const bridge = localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store';
+  fetch(bridge)
+    .then(r => (r.ok ? r.json() : null))
+    .then(data => {
+      if (!data || !data.projects) return;
+      S.data = data;
+      localStorage.removeItem('gr8r.v3');
+      render();
+    })
+    .catch(() => {});
 })();
 
 // Dev-only handle for debugging and screenshot tooling; stripped from production builds.

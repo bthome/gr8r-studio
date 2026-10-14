@@ -1889,6 +1889,20 @@ A.wsColor = el => {
   save();
   render();
 };
+A.saveFilesPath = () => {
+  const path = $('#files-path').value.trim();
+  if (!path) return toast('Enter a folder path', { kind: 'err' });
+  const bridge = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '');
+  fetch(bridge + '/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path }) })
+    .then(r => r.json())
+    .then(j => {
+      if (j.error) return toast(j.error, { kind: 'err' });
+      D().filesPath = path;
+      toast('Files path saved');
+      render();
+    })
+    .catch(() => toast('Bridge is not running', { kind: 'err' }));
+};
 A.saveWorkspace = () => {
   const n = $('#ws-name').value.trim();
   const u = $('#ws-url')
