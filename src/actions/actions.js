@@ -831,10 +831,7 @@ export function handleFiles(files, ctx) {
   });
   render();
 }
-IN.uploadFiles = el => {
-  handleFiles(el.files, { project: el.dataset.project, task: el.dataset.task });
-  el.value = '';
-};
+IN.uploadFiles = () => {};
 
 /* comments */
 IN.draft = el => {

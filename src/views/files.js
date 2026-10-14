@@ -35,17 +35,17 @@ export function filesHtml(pid) {
       ]
         .map(([k, i]) => `<button class="${view === k ? 'on' : ''}" data-a="set" data-k="fileView" data-v="${k}" aria-label="${k} view">${ic(i, 13)}</button>`)
         .join('')}</div>
-      <label class="btn btn-primary btn-sm" style="cursor:pointer">${ic('upload', 13)}Upload<input type="file" multiple hidden data-in="uploadFiles" data-project="${pid}"></label>
+      <span class="muted" style="font-size:12.5px">Mates add files. You read them here.</span>
     </div>
     <div class="page wide" style="padding-top:16px">
-      <label class="dropzone" data-dropzone="${pid}" style="margin-bottom:16px">${ic('upload-cloud', 18)}<span>Drop files here or <span class="link">browse</span> — up to 250 MB each</span><input type="file" multiple hidden data-in="uploadFiles" data-project="${pid}"></label>
+      ''
       ${ups.length ? `<div class="col" style="gap:6px;margin-bottom:16px">${ups.map(x => `<div class="upl"><span class="ftype" style="--c:${FT[fileType(x.name)].c}">${ic(FT[fileType(x.name)].i, 14)}</span><div class="grow"><div class="row"><span class="trunc" style="font-weight:500">${esc(x.name)}</span><span class="sp"></span><span class="faint num" style="font-size:11.5px" id="upct-${x.id}">${x.pct}%</span></div><div class="prog" style="margin-top:6px"><i id="upbar-${x.id}" style="--p:${x.pct / 100}"></i></div></div></div>`).join('')}</div>` : ''}
       ${
         !fs.length
           ? empty(
               q || ft !== 'all' ? 'search-x' : 'folder-open',
               q || ft !== 'all' ? 'No results found' : 'No files yet',
-              q || ft !== 'all' ? 'No files match your search.' : 'Upload designs, documents, and assets to share them with the project.',
+              q || ft !== 'all' ? 'No files match your search.' : 'No files yet. A mate adds one through AXI.',
               '',
             )
           : view === 'grid'
