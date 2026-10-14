@@ -6,6 +6,8 @@ board / list / table / calendar / timeline / files views, members, teams, activi
 Built with plain JavaScript ES modules and CSS, bundled by [Vite](https://vite.dev). There is no
 UI framework and no runtime dependency.
 
+This fork is the working repo. Mail, login, access requests, and billing are removed. Notifications are firstmate signals. The store is `gr8r-axi/`. See `gr8r-axi/AGENT-README.md`.
+
 ![Gr8r Studio home dashboard](docs/preview.png)
 
 ## Getting started

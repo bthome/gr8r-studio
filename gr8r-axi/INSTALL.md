@@ -1,5 +1,7 @@
 # Install
 
+The package lives in `bthome/gr8r-studio/gr8r-axi`. Clone that repo. Do not open an upstream PR.
+
 ## What you need
 
 - Node.js 20 or newer
