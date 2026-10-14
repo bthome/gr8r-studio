@@ -1404,7 +1404,18 @@ A.delProject = el => {
     },
   });
 };
-A.requestAccess = el => {
+A.requestAccess = () => {};
+A.invite = () => {};
+A.submitInvite = () => {};
+A.resendInvite = () => {};
+A.doLogin = () => {};
+A.doSignup = () => {};
+A.socialAuth = () => {};
+A.savePassword = () => {};
+A.setup2fa = () => {};
+A.verify2fa = () => {};
+A.disable2fa = () => {};
+A.changePlan = () => {};
   const p = proj(el.dataset.id);
   toast(`Access requested. We'll notify you when ${mem(p?.lead)?.name || 'the owner'} responds.`);
 };
