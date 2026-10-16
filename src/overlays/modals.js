@@ -83,58 +83,17 @@ export function taskModal(m, H) {
     <div class="field"><span class="label">Subtasks</span>
       ${f.subtasks.map((s, i) => `<div class="subt" style="padding:0 4px">${ic('circle', 13)}<span class="s">${esc(s.title)}</span><button type="button" class="ibtn ibtn-xs x" style="opacity:1" data-a="formRmSub" data-i="${i}" aria-label="Remove">${ic('x', 12)}</button></div>`).join('')}
       <div class="inwrap">${ic('plus', 14)}<input class="input" id="f-sub" data-key-enter="formAddSub" placeholder="Add a subtask and press Enter"></div></div>
-    <div class="field"><span class="label">Attachments</span>
-      ${f.files.length ? `<div class="col" style="gap:4px">${f.files.map((x, i) => `<div class="upl" style="padding:6px 10px"><span class="ftype" style="--c:${FT[x.type].c};width:22px;height:22px">${ic(FT[x.type].i, 12)}</span><span class="grow trunc">${esc(x.name)}</span><span class="faint" style="font-size:11.5px">${x.size}</span><button type="button" class="ibtn ibtn-xs" data-a="formRmFile" data-i="${i}" aria-label="Remove">${ic('x', 12)}</button></div>`).join('')}</div>` : ''}
-      <label class="dropzone" style="padding:10px">${ic('paperclip', 14)}<span>Attach files</span><input type="file" multiple hidden data-in="formFiles"></label></div>
   </form>
   <div class="modal-f">${m.edit ? '' : `<label class="row" style="gap:8px;font-size:12.5px;color:var(--text-2);cursor:pointer"><input type="checkbox" class="toggle" id="f-more" data-in="formMore" ${f.more ? 'checked' : ''}>Create more</label>`}<span class="sp"></span>
     <span class="faint hide-m" style="font-size:11.5px"><kbd>${MOD}</kbd> <kbd>↵</kbd></span>
     <button class="btn btn-secondary" data-a="closeModal">Cancel</button><button class="btn btn-primary" data-a="submitTask" id="f-submit">${m.edit ? 'Save changes' : 'Create task'}</button></div>`;
 }
 export const TEMPLATES = [
-  { id: 'blank', name: 'Blank project', icon: 'file', desc: 'Start from scratch', tasks: [] },
-  {
-    id: 'product',
-    name: 'Product Development',
-    icon: 'target',
-    desc: 'Discovery to launch',
-    tasks: ['Define problem statement', 'User research plan', 'Write PRD', 'Design exploration', 'Build MVP', 'Beta launch'],
-  },
-  {
-    id: 'web',
-    name: 'Website',
-    icon: 'globe',
-    desc: 'IA, design, build, launch',
-    tasks: ['Sitemap & information architecture', 'Wireframes', 'Visual design', 'Build page templates', 'Content migration', 'QA & launch'],
-  },
-  {
-    id: 'mkt',
-    name: 'Marketing Campaign',
-    icon: 'megaphone',
-    desc: 'Brief, assets, channels',
-    tasks: ['Campaign brief', 'Audience research', 'Creative assets', 'Channel plan', 'Launch campaign', 'Performance report'],
-  },
-  {
-    id: 'design',
-    name: 'Design Project',
-    icon: 'palette',
-    desc: 'Discovery to handoff',
-    tasks: ['Discovery workshop', 'Moodboard', 'Concept directions', 'Refinement', 'Developer handoff'],
-  },
-  {
-    id: 'software',
-    name: 'Software Development',
-    icon: 'code',
-    desc: 'Spec, build, ship',
-    tasks: ['Technical spec', 'Set up repo & CI', 'Implement core API', 'Write tests', 'Code review', 'Deploy to staging'],
-  },
-  {
-    id: 'personal',
-    name: 'Personal Project',
-    icon: 'heart',
-    desc: 'Plan your own goals',
-    tasks: ['Brain dump ideas', 'Pick top 3 priorities', 'Schedule focus time', 'Weekly review'],
-  },
+  { id: 'blank', name: 'Blank', icon: 'file', desc: 'No starter tasks', tasks: [] },
+  { id: 'incident', name: 'Incident', icon: 'siren', desc: 'Something is broken now', tasks: ['Confirm the impact', 'Restore the service', 'Write the postmortem'] },
+  { id: 'problem', name: 'Problem', icon: 'search', desc: 'Find the cause', tasks: ['Gather the symptoms', 'Find the root cause', 'Propose the fix'] },
+  { id: 'service', name: 'Service request', icon: 'hand-helping', desc: 'A requested change of access or setup', tasks: ['Confirm the request', 'Make the change', 'Confirm it works'] },
+  { id: 'change', name: 'Change', icon: 'git-branch', desc: 'A planned change', tasks: ['Write the plan', 'Review the risk', 'Apply the change', 'Verify'] },
 ];
 export function projectModal(m, H) {
   const f = S.ui.pform;
@@ -283,8 +242,13 @@ export function shortcutsModal(H) {
 export function filePreviewModal(m, H) {
   const f = m.file;
   const t = FT[f.type] || FT.other;
-  return `${H(esc(f.name), `${t.n} · ${f.size} · Uploaded by ${esc(mem(f.by)?.name || 'you')} ${ago(f.at)}`)}
-  <div class="modal-b"><div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">${filePrev(f).replace('class="fprev"', 'class="fprev" style="aspect-ratio:16/9"')}</div>
-  ${m.tid ? `<div class="row faint" style="font-size:12.5px">${ic('link', 13)}Attached to <button class="link" data-a="openTask" data-id="${m.tid}">${esc(task(m.tid)?.title)}</button></div>` : ''}</div>
-  <div class="modal-f"><button class="btn btn-secondary" data-a="copyLink" data-fid="${f.id}">${ic('link', 14)}Copy link</button><span class="sp"></span><button class="btn btn-primary" data-a="closeModal">Close</button></div>`;
+  const src = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + '/files/' + f.id;
+  const body = f.type === 'image'
+    ? `<img src="${src}" alt="${esc(f.name)}" style="width:100%;border-radius:8px">`
+    : f.type === 'doc' || /\.md$/i.test(f.name)
+      ? `<div class="md" data-src="${src}" style="white-space:pre-wrap;font-size:13.5px;line-height:1.5">Loading…</div>`
+      : `<p class="muted">This file is on disk. Open it from the folder set in Settings.</p>`;
+  return `${H(esc(f.name), `${t.n} · ${f.size || ''} · ${esc(mem(f.by)?.name || '')}`)}
+  <div class="modal-b">${body}</div>
+  <div class="modal-f"><span class="sp"></span><button class="btn btn-primary" data-a="closeModal">Close</button></div>`;
 }

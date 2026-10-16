@@ -16,8 +16,6 @@ export const SET_NAV = [
       ['workspace', 'Workspace', 'building-2'],
       ['files', 'Files', 'folder'],
       ['appearance', 'Appearance', 'palette'],
-      ['language', 'Language', 'languages'],
-      ['datetime', 'Date & time', 'clock'],
     ],
   ],
   [
@@ -72,8 +70,8 @@ export function settingsBody(sec, title) {
   switch (sec) {
     case 'files':
       return (
-        H('Where uploaded files are stored. SQLite keeps the pointer. The file lives on disk as id - description.') +
-        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="files-path">Files path</label><input class="input" id="files-path" value="${esc(d.filesPath || '')}" placeholder="/Users/you/gr8r-files"><span class="hint">AXI writes each file as <code>id - description.ext</code> inside this folder.</span></div><button class="btn btn-primary" data-a="saveFilesPath" style="margin-top:12px">Save path</button></div>`
+        H('The folder where mate files are kept.') +
+        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="files-path">Folder</label><input class="input" id="files-path" value="${esc(d.filesPath || '')}" placeholder="/Users/you/gr8r-files"></div><button class="btn btn-primary" data-a="saveFilesPath" style="margin-top:12px">Save path</button></div>`
       );
       return (
         H('Your workspace name, address, and identity.') +

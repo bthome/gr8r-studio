@@ -5,7 +5,7 @@ export function seed() {
   const members = [
     {
       id: 'm1',
-      name: 'Tanjim Islam',
+      name: 'Captain Brian',
       email: 'hello@gr8rstudio.com',
       role: 'Owner',
       team: 'product',
@@ -498,9 +498,9 @@ export function seed() {
   const tmp = tk('t3');
   tmp.updated = minsAgo(38);
   return {
-    ws: { name: 'Gr8r Studio', url: 'gr8rstudio', c: '#1D1C1A', brand: true },
+    ws: { name: 'Fleet Board', url: 'fleet', c: '#1D1C1A', brand: true },
     workspaces: [
-      { id: 'w1', name: 'Gr8r Studio', c: '#1D1C1A', plan: 'Team', brand: true },
+      { id: 'w1', name: 'Fleet Board', c: '#1D1C1A', plan: 'Team', brand: true },
       { id: 'w2', name: 'Personal', c: '#3D8E5F', plan: 'Free' },
       { id: 'w3', name: 'Acme Labs', c: '#3B82C4', plan: 'Business' },
     ],

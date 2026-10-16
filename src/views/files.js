@@ -38,14 +38,13 @@ export function filesHtml(pid) {
       <span class="muted" style="font-size:12.5px">Mates add files. You read them here.</span>
     </div>
     <div class="page wide" style="padding-top:16px">
-      ''
       ${ups.length ? `<div class="col" style="gap:6px;margin-bottom:16px">${ups.map(x => `<div class="upl"><span class="ftype" style="--c:${FT[fileType(x.name)].c}">${ic(FT[fileType(x.name)].i, 14)}</span><div class="grow"><div class="row"><span class="trunc" style="font-weight:500">${esc(x.name)}</span><span class="sp"></span><span class="faint num" style="font-size:11.5px" id="upct-${x.id}">${x.pct}%</span></div><div class="prog" style="margin-top:6px"><i id="upbar-${x.id}" style="--p:${x.pct / 100}"></i></div></div></div>`).join('')}</div>` : ''}
       ${
         !fs.length
           ? empty(
               q || ft !== 'all' ? 'search-x' : 'folder-open',
               q || ft !== 'all' ? 'No results found' : 'No files yet',
-              q || ft !== 'all' ? 'No files match your search.' : 'No files yet. A mate adds one through AXI.',
+              q || ft !== 'all' ? 'No files match your search.' : 'No files yet.',
               '',
             )
           : view === 'grid'

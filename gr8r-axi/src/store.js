@@ -21,7 +21,7 @@ export class Store {
   init() {
     tx(this.db, () => {
       if (this.db.prepare('SELECT COUNT(*) c FROM members').get().c) return;
-      this.db.prepare('INSERT INTO members (id, name, email, role) VALUES (?, ?, ?, ?)').run('m1', 'Captain', 'captain@local', 'Owner');
+      this.db.prepare('INSERT INTO members (id, name, email, role) VALUES (?, ?, ?, ?)').run('m1', 'Captain Brian', 'captain@local', 'Owner');
       this.db.prepare('INSERT INTO members (id, name, email, role) VALUES (?, ?, ?, ?)').run('fm', 'First mate', 'fm@local', 'Admin');
       this.db.prepare('INSERT INTO members (id, name, email, role) VALUES (?, ?, ?, ?)').run('m6', 'Marcus Lee', 'marcus@local', 'Member');
       this.db.prepare('INSERT INTO projects (id, key, name, status, lead) VALUES (?, ?, ?, ?, ?)').run('p8', 'PAY', 'payments-api', 'active', 'm6');
@@ -186,7 +186,7 @@ export class Store {
       recur: null,
     }));
     return {
-      ws: { name: 'Gr8r Studio', url: 'gr8rstudio', c: '#1D1C1A', brand: true },
+      ws: { name: 'Fleet Board', url: 'fleet', c: '#1D1C1A', brand: true },
       me: 'm1',
       members,
       projects,

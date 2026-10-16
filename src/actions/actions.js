@@ -794,8 +794,14 @@ A.filePreview = el => {
 };
 A.previewFile = el => {
   const f = D().files.find(x => x.id === el.dataset.id);
-  S.ui.pop = null;
-  if (f) openModal({ type: 'filePreview', file: f, tid: f.task });
+  if (f) {
+    openModal({ type: 'filePreview', file: f, tid: f.task });
+    setTimeout(() => {
+      const box = document.querySelector('.md[data-src]');
+      if (!box) return;
+      fetch(box.dataset.src).then(r => r.text()).then(t => (box.textContent = t)).catch(() => (box.textContent = 'Could not open the file.'));
+    }, 50);
+  }
 };
 export function handleFiles(files, ctx) {
   if (!files || !files.length) return;

@@ -3,6 +3,7 @@ import { open } from '../src/db.js';
 import { Store } from '../src/store.js';
 import { CATALOG } from '../src/catalog.js';
 import { createServer } from 'node:http';
+import { createReadStream } from 'node:fs';
 
 const args = process.argv.slice(2);
 const [cmd, sub] = args;
@@ -52,6 +53,13 @@ try {
       if (req.url === '/store') {
         res.setHeader('content-type', 'application/json');
         res.end(JSON.stringify(store.document()));
+        return;
+      }
+      if (req.url.startsWith('/files/')) {
+        const id = req.url.slice('/files/'.length);
+        const row = db.prepare('SELECT path FROM files WHERE id = ?').get(id);
+        if (!row) { res.statusCode = 404; res.end('not found'); return; }
+        createReadStream(row.path).pipe(res);
         return;
       }
       if (req.url === '/settings' && req.method === 'POST') {
