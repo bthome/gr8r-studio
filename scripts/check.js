@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 // Smoke check. Prints one line per check. Exit 1 if any fail.
-//   node scripts/check.js
-import { mkdtempSync } from 'node:fs';
+//   npm run check
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { open } from '../gr8r-axi/src/db.js';
-import { Store } from '../gr8r-axi/src/store.js';
+
+if (!existsSync(new URL('../gr8r-axi/node_modules/better-sqlite3', import.meta.url))) {
+  console.error('\nThe check needs the database library. From the repo root:\n');
+  console.error('  npm --prefix gr8r-axi ci\n');
+  process.exit(1);
+}
+
+const { open } = await import('../gr8r-axi/src/db.js');
+const { Store } = await import('../gr8r-axi/src/store.js');
 
 const dir = mkdtempSync(join(tmpdir(), 'gr8r-check-'));
 const db = open(join(dir, 'gr8r.db'));

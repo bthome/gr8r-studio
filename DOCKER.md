@@ -15,11 +15,13 @@ docker compose down -v
 docker compose up --build
 ```
 
-To check the store and the pages against real data:
+To check the store and the pages against real data, from the repo root:
 
 ```bash
+npm --prefix gr8r-axi ci
 npm run check
 ```
 
-Each line is `ok` or `FAIL`. A non-zero exit means something broke.
+The first command installs the database library. You only need it once. Each line is `ok` or `FAIL`. A non-zero exit means something broke. Docker does not need to be running.
+
 
