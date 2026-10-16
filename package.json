@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "check": "node --experimental-loader ./scripts/loader.js scripts/check.js"
   },
   "engines": {
     "node": ">=18"

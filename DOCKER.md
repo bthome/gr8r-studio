@@ -15,4 +15,11 @@ docker compose down -v
 docker compose up --build
 ```
 
-Node 22 image. `better-sqlite3` builds inside the container, so you do not need a compiler on the host.
+To check the store and the pages against real data:
+
+```bash
+npm run check
+```
+
+Each line is `ok` or `FAIL`. A non-zero exit means something broke.
+
