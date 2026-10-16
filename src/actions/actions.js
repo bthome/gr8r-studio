@@ -26,7 +26,11 @@ export function nextKey(p) {
   return p.key + '-' + p.seq;
 }
 export function createTask(f) {
-  const p = proj(f.project) || visibleProjects().find(canSee);
+  const p = proj(f.project);
+  if (!p) {
+    toast('Pick a project first.', { kind: 'err' });
+    return null;
+  }
   const maxO = Math.max(0, ...D().tasks.map(t => t.order));
   const t = Object.assign(
     {
@@ -687,7 +691,11 @@ A.commitComposer = () => {
     return;
   }
   const f = { title: v, ...c.gb };
-  f.project = f.project || projectFromKey(c.ctx) || curProjectId() || 'p1';
+  f.project = f.project || projectFromKey(c.ctx) || curProjectId();
+  if (!f.project || !proj(f.project)) {
+    toast('Pick a project first.', { kind: 'err' });
+    return;
+  }
   if (c.ctx === 'mytasks') f.assignee = D().me;
   mutate(() => createTask(f));
   setTimeout(() => $('#composer-in')?.focus(), 0);

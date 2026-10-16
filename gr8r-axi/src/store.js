@@ -66,6 +66,7 @@ export class Store {
       const fields = [];
       const vals = [];
       for (const [k, v] of Object.entries(set)) {
+        if (v === undefined) continue;
         const col = k === 'fmTask' ? 'fm_task' : k;
         if (!['status', 'assignee', 'priority', 'title', 'due', 'desc', 'fm_task'].includes(col)) continue;
         fields.push(`${col} = ?`);

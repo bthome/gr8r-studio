@@ -5,3 +5,5 @@ dist/
 __MACOSX/
 *.log
 .env*
+*.db
+*.db-*

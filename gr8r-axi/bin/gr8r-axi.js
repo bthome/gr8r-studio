@@ -35,7 +35,14 @@ try {
   else if (cmd === 'task' && sub === 'list') out(store.listTasks(flags.project));
   else if (cmd === 'task' && sub === 'view') out(store.task(pos[0]));
   else if (cmd === 'task' && sub === 'create') out(store.createTask({ as: flags.as, project: flags.project, title: flags.title, status: flags.status, assignee: flags.assignee, priority: flags.priority, fmTask: flags.fm_task }));
-  else if (cmd === 'task' && sub === 'update') out(store.updateTask({ as: flags.as, key: pos[0], set: { status: flags.status, title: flags.title, assignee: flags.assignee, fmTask: flags.fm_task }, expected: flags.version }));
+  else if (cmd === 'task' && sub === 'update') {
+    const set = {};
+    if (flags.status != null) set.status = flags.status;
+    if (flags.title != null) set.title = flags.title;
+    if (flags.assignee != null) set.assignee = flags.assignee;
+    if (flags.fm_task != null) set.fmTask = flags.fm_task;
+    out(store.updateTask({ as: flags.as, key: pos[0], set, expected: flags.version }));
+  }
   else if (cmd === 'task' && sub === 'delete') out(store.deleteTask({ as: flags.as, key: pos[0] }));
   else if (cmd === 'settings' && sub === 'set') out(store.setPath(flags.path));
   else if (cmd === 'settings' && sub === 'get') out({ 'files.path': store.fileRoot() });
