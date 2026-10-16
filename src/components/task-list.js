@@ -5,7 +5,7 @@ import { ago, esc, relDate } from '../core/utils.js';
 import { ic } from '../core/icons.js';
 import { PR, ST } from '../core/constants.js';
 import { D, S, commentsOf, isOver, mem, pColor, proj, task } from '../core/store.js';
-import { av, dueHtml, empty, lbl, prIcon, prPill, stIcon, stPill } from '../ui/helpers.js';
+import { av, dueHtml, empty, lbl, prIcon, prPill, stPill } from '../ui/helpers.js';
 import { fxc } from '../shell/render.js';
 
 /* ---------- shared list renderer ---------- */
@@ -137,7 +137,6 @@ export function miniRow(t, opt = {}) {
   const p = proj(t.project);
   return `<div class="mini ${t.status === 'done' ? 'done' : ''}${fxc('done', t.id)}${fxc('added', t.id)}" data-a="openTask" data-id="${t.id}" data-ctx="task" role="button" tabindex="0">
     <input type="checkbox" class="check round" ${t.status === 'done' ? 'checked' : ''} data-a="toggleDone" data-id="${t.id}" aria-label="Complete ${esc(t.title)}">
-    <span data-tip="${ST[t.status].name}">${stIcon(t.status)}</span>
     <span class="tt">${esc(t.title)}</span>
     ${opt.noProj ? '' : `<span class="pj hide-m"><span class="pdot" style="--c:${pColor(p)}"></span><span class="trunc">${esc(p.name)}</span></span>`}
     <span data-tip="${PR[t.priority].name} priority">${prIcon(t.priority)}</span>
