@@ -1,0 +1,12 @@
+services:
+  studio:
+    build: .
+    ports:
+      - "5173:5173"
+      - "8787:8787"
+    volumes:
+      - gr8r-data:/data
+    restart: unless-stopped
+
+volumes:
+  gr8r-data:
