@@ -91,6 +91,8 @@ export function save() {
     } catch {
       /* storage full or blocked: keep working in memory */
     }
+    const bridge = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '');
+    fetch(bridge + '/sync', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(S.data) }).catch(() => {});
   }, 150);
 }
 

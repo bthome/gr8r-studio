@@ -48,9 +48,31 @@ export function open(file) {
     CREATE TABLE IF NOT EXISTS outbox (
       id TEXT PRIMARY KEY, fm_task TEXT, task TEXT, event TEXT, at INTEGER, acked INTEGER DEFAULT 0
     );
+    CREATE TABLE IF NOT EXISTS subtasks (
+      id TEXT PRIMARY KEY, task TEXT, title TEXT, done INTEGER DEFAULT 0,
+      assignee TEXT, due TEXT, ord INTEGER DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS milestones (
+      id TEXT PRIMARY KEY, project TEXT, name TEXT, date TEXT
+    );
     CREATE TABLE IF NOT EXISTS applied (id TEXT PRIMARY KEY, at INTEGER);
   `);
-  try { db.exec('ALTER TABLE files ADD COLUMN path TEXT'); } catch { /* column exists */ }
+  const add = (sql) => { try { db.exec(sql); } catch { /* column exists */ } };
+  add('ALTER TABLE files ADD COLUMN path TEXT');
+  add('ALTER TABLE tasks ADD COLUMN start TEXT');
+  add('ALTER TABLE tasks ADD COLUMN fav INTEGER DEFAULT 0');
+  add('ALTER TABLE tasks ADD COLUMN recur TEXT');
+  add('ALTER TABLE tasks ADD COLUMN estimate TEXT');
+  add('ALTER TABLE tasks ADD COLUMN completed_at INTEGER');
+  add('ALTER TABLE tasks ADD COLUMN order_n INTEGER DEFAULT 0');
+  add('ALTER TABLE tasks ADD COLUMN prev_status TEXT');
+  add("ALTER TABLE projects ADD COLUMN icon TEXT DEFAULT 'zap'");
+  add("ALTER TABLE projects ADD COLUMN color TEXT DEFAULT 'amber'");
+  add('ALTER TABLE projects ADD COLUMN fav INTEGER DEFAULT 0');
+  add("ALTER TABLE projects ADD COLUMN desc TEXT DEFAULT ''");
+  add('ALTER TABLE projects ADD COLUMN due TEXT');
+  add('ALTER TABLE projects ADD COLUMN start TEXT');
+  add('ALTER TABLE projects ADD COLUMN team TEXT');
   return db;
 }
 
