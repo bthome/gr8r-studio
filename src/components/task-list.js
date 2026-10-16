@@ -136,7 +136,7 @@ export function actHtml(a, opt = {}) {
 export function miniRow(t, opt = {}) {
   const p = proj(t.project);
   return `<div class="mini ${t.status === 'done' ? 'done' : ''}${fxc('done', t.id)}${fxc('added', t.id)}" data-a="openTask" data-id="${t.id}" data-ctx="task" role="button" tabindex="0">
-    <input type="checkbox" class="check round" ${t.status === 'done' ? 'checked' : ''} data-a="toggleDone" data-id="${t.id}" aria-label="Complete ${esc(t.title)}">
+    <input type="checkbox" class="check round st-${t.status}" ${t.status === 'done' ? 'checked' : ''} data-a="toggleDone" data-id="${t.id}" data-tip="${ST[t.status].name}" aria-label="Complete ${esc(t.title)}">
     <span class="tt">${esc(t.title)}</span>
     ${opt.noProj ? '' : `<span class="pj hide-m"><span class="pdot" style="--c:${pColor(p)}"></span><span class="trunc">${esc(p.name)}</span></span>`}
     <span data-tip="${PR[t.priority].name} priority">${prIcon(t.priority)}</span>

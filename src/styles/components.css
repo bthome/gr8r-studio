@@ -347,6 +347,26 @@
   width: 16px;
   height: 16px;
 }
+.check.round.st-backlog {
+  border-style: dashed;
+  border-color: var(--st-backlog);
+}
+.check.round.st-todo {
+  border-color: var(--st-todo);
+}
+.check.round.st-progress {
+  border-color: var(--st-progress);
+  background: conic-gradient(var(--st-progress) 0 50%, var(--surface) 50% 100%);
+}
+.check.round.st-review {
+  border-color: var(--st-review);
+  background: conic-gradient(var(--st-review) 0 75%, var(--surface) 75% 100%);
+}
+.check.round.st-done,
+.check.round.st-done:checked {
+  background: var(--st-done);
+  border-color: var(--st-done);
+}
 .toggle {
   appearance: none;
   width: 30px;
