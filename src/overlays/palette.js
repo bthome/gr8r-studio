@@ -114,14 +114,6 @@ export function paletteItems() {
       items: [
         { icon: 'clock-alert', name: 'Overdue tasks', run: () => A.goTasks({ dataset: { f: 'overdue' } }) },
         { icon: 'user', name: 'Tasks assigned to me', run: () => go('mytasks') },
-        {
-          icon: 'signal-high',
-          name: 'High priority in Website Redesign',
-          run: () => {
-            go('project', { id: 'p1', tab: 'v:v1' });
-          },
-        },
-        { icon: 'paperclip', name: 'Files in Website Redesign', run: () => go('project', { id: 'p1', tab: 'files' }) },
       ],
     });
     return groups;
@@ -132,7 +124,7 @@ export function paletteItems() {
       name: 'Tasks',
       items: r.tasks
         .slice(0, lim)
-        .map(t => ({ html: stIcon(t.status), name: t.title, sub: proj(t.project).name, r: t.key, run: () => A.openTask({ dataset: { id: t.id } }) })),
+        .map(t => ({ html: stIcon(t.status), name: t.title, sub: proj(t.project)?.name || '', r: t.key, run: () => A.openTask({ dataset: { id: t.id } }) })),
     });
   if (sc === 'all' || sc === 'projects')
     groups.push({
@@ -153,9 +145,9 @@ export function paletteItems() {
     groups.push({
       name: 'Files',
       items: r.files.slice(0, lim).map(f => ({
-        icon: FT[f.type].i,
+        icon: (FT[f.type] || FT.other).i,
         name: f.name,
-        sub: proj(f.project).name,
+        sub: proj(f.project)?.name || '',
         r: f.size,
         run: () => openModal({ type: 'filePreview', file: f, tid: f.task }),
       })),

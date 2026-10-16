@@ -239,6 +239,7 @@ export class Store {
       for (const c of doc.comments || []) this.db.prepare('INSERT INTO comments (id, task, by, text, at) VALUES (?, ?, ?, ?, ?)').run(c.id, c.task, c.by, c.text, c.at);
       this.db.prepare('DELETE FROM activity').run();
       for (const a of (doc.activity || []).slice(0, 200)) this.db.prepare('INSERT INTO activity (id, task, project, verb, by, at) VALUES (?, ?, ?, ?, ?, ?)').run(a.id, a.task, a.project, a.verb, a.by, a.at);
+      this.db.prepare('INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v').run('recent', JSON.stringify((doc.recentSearches || []).slice(0, 5)));
       return this.document();
     });
   }
@@ -279,11 +280,15 @@ export class Store {
       comments: this.db.prepare('SELECT * FROM comments').all(),
       activity: this.db.prepare('SELECT * FROM activity ORDER BY at DESC LIMIT 50').all(),
       notifs: this.db.prepare('SELECT * FROM notifs').all(),
-      files: this.db.prepare('SELECT * FROM files').all(),
+      files: this.db.prepare('SELECT * FROM files').all().map(f => ({
+        ...f,
+        type: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name) ? 'img' : /\.pdf$/i.test(f.name) ? 'pdf' : /\.(md|txt|doc)$/i.test(f.name) ? 'doc' : 'other',
+        size: '',
+      })),
       events: this.db.prepare('SELECT * FROM events').all(),
       projOrder: projects.map(p => p.id),
       savedViews: this.db.prepare('SELECT * FROM views').all(),
-      recentSearches: [],
+      recentSearches: JSON.parse(this.db.prepare("SELECT v FROM meta WHERE k = 'recent'").get()?.v || '[]'),
       filesPath: this.fileRoot(),
     };
   }
