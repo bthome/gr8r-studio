@@ -5,7 +5,7 @@ import { connect, createServer } from 'node:net';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const bin = new URL('../bin/gr8r-axi.js', import.meta.url).pathname;
+const bin = new URL('../bin/fleet-axi.js', import.meta.url).pathname;
 const STUDIO = 'http://localhost:5173';
 let failed = 0;
 
@@ -71,11 +71,11 @@ function sendOversized(port, { chunked = false } = {}) {
 }
 
 function setup() {
-  const dir = mkdtempSync(join(tmpdir(), 'gr8r-bridge-'));
-  const env = { ...process.env, GR8R_DB: join(dir, 'gr8r.db') };
-  delete env.GR8R_PASSPHRASE;
-  delete env.GR8R_ALLOWED_ORIGINS;
-  delete env.GR8R_HOST;
+  const dir = mkdtempSync(join(tmpdir(), 'fleet-bridge-'));
+  const env = { ...process.env, FLEET_DB: join(dir, 'fleet.db') };
+  delete env.FLEET_PASSPHRASE;
+  delete env.FLEET_ALLOWED_ORIGINS;
+  delete env.FLEET_HOST;
   const axi = (...a) => JSON.parse(execFileSync('node', [bin, ...a], { env }).toString());
   const files = join(dir, 'files');
   mkdirSync(files);
@@ -163,19 +163,19 @@ await check('the bind defaults to 127.0.0.1', async () => {
 a.child.kill();
 
 console.log('\nPassphrase');
-const b = await serve(env, { GR8R_PASSPHRASE: 's3cret' });
+const b = await serve(env, { FLEET_PASSPHRASE: 's3cret' });
 const q = b.port;
 await check('no passphrase gets 401', async () => expect((await send(q, { headers: { origin: STUDIO } })).status, 401));
-await check('a wrong passphrase gets 401', async () => expect((await send(q, { headers: { origin: STUDIO, 'x-gr8r-passphrase': 's3cre' } })).status, 401));
-await check('the right passphrase gets 200', async () => expect((await send(q, { headers: { origin: STUDIO, 'x-gr8r-passphrase': 's3cret' } })).status, 200));
+await check('a wrong passphrase gets 401', async () => expect((await send(q, { headers: { origin: STUDIO, 'x-fleet-passphrase': 's3cre' } })).status, 401));
+await check('the right passphrase gets 200', async () => expect((await send(q, { headers: { origin: STUDIO, 'x-fleet-passphrase': 's3cret' } })).status, 200));
 await check('a CORS preflight from the Studio passes without it', async () => {
   const r = await send(q, {
     method: 'OPTIONS',
     path: '/sync',
-    headers: { origin: STUDIO, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type,x-gr8r-passphrase' },
+    headers: { origin: STUDIO, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type,x-fleet-passphrase' },
   });
   expect(r.status, 204);
-  if (!/x-gr8r-passphrase/.test(r.headers['access-control-allow-headers'] || '')) throw new Error('passphrase header not allowed');
+  if (!/x-fleet-passphrase/.test(r.headers['access-control-allow-headers'] || '')) throw new Error('passphrase header not allowed');
 });
 b.child.kill();
 

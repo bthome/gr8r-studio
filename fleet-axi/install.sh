@@ -18,9 +18,9 @@ fi
 echo "Node $(node -v)"
 npm install
 npm test
-npx gr8r-axi init
+npx fleet-axi init
 
 echo
-echo "Installed. Database is ./gr8r.db"
-echo "Next: npx gr8r-axi doctor"
-echo "Page bridge: npx gr8r-axi serve"
+echo "Installed. Database is ./fleet.db"
+echo "Next: npx fleet-axi doctor"
+echo "Page bridge: npx fleet-axi serve"

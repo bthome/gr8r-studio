@@ -21,7 +21,7 @@ for (let i = sub ? 2 : 1; i < args.length; i++) {
     flags[k] = BOOL.has(k) ? inline !== 'false' : (inline ?? args[++i]);
   } else pos.push(a);
 }
-const file = process.env.GR8R_DB || new URL('../gr8r.db', import.meta.url).pathname;
+const file = process.env.FLEET_DB || new URL('../fleet.db', import.meta.url).pathname;
 // restore must not hold the live database open while it swaps the file.
 const db = cmd === 'restore' ? null : open(file);
 const store = db && new Store(db);
@@ -35,7 +35,7 @@ try {
   if (!cmd || cmd === 'help') {
     out({
       commands: ['init', 'vocab', 'task', 'project', 'comment', 'doctor', 'file', 'settings', 'outbox', 'ack', 'serve', 'backup', 'restore', 'export'],
-      next: 'gr8r-axi init',
+      next: 'fleet-axi init',
     });
   } else if (cmd === 'init') out(store.init());
   else if (cmd === 'vocab') out(sub ? { [sub]: CATALOG[sub] } : CATALOG);
@@ -87,14 +87,14 @@ try {
     if (flags.json) out(r);
     else console.log(r.file);
   } else if (cmd === 'restore') {
-    if (!sub) throw new Error('usage: gr8r-axi restore <backup file> [--force]');
+    if (!sub) throw new Error('usage: fleet-axi restore <backup file> [--force]');
     out(restore(file, sub, { open, force: flags.force }));
-  } else if (cmd === 'serve') serve(Number(flags.port || 8787), flags.host || process.env.GR8R_HOST || '127.0.0.1');
+  } else if (cmd === 'serve') serve(Number(flags.port || 8787), flags.host || process.env.FLEET_HOST || '127.0.0.1');
   else {
     throw new Error(`unknown ${cmd} ${sub || ''}`);
   }
 } catch (err) {
-  console.error(JSON.stringify({ error: err.message, next: 'gr8r-axi help' }));
+  console.error(JSON.stringify({ error: err.message, next: 'fleet-axi help' }));
   process.exit(1);
 }
 
@@ -111,15 +111,15 @@ function serve(port, host) {
     }
   };
   const MAX_BODY = 5 * 1024 * 1024;
-  const allowed = (process.env.GR8R_ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  const allowed = (process.env.FLEET_ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
-  const extraHosts = (process.env.GR8R_ALLOWED_HOSTS || '')
+  const extraHosts = (process.env.FLEET_ALLOWED_HOSTS || '')
     .split(',')
     .map(h => h.trim().toLowerCase())
     .filter(Boolean);
-  const passphrase = process.env.GR8R_PASSPHRASE || '';
+  const passphrase = process.env.FLEET_PASSPHRASE || '';
   const digest = s => createHash('sha256').update(String(s)).digest();
   const TYPES = {
     '.txt': 'text/plain; charset=utf-8',
@@ -205,7 +205,7 @@ function serve(port, host) {
         res.setHeader('access-control-allow-origin', origin);
         res.setHeader('vary', 'Origin');
         res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
-        res.setHeader('access-control-allow-headers', 'content-type, x-gr8r-passphrase');
+        res.setHeader('access-control-allow-headers', 'content-type, x-fleet-passphrase');
       }
       if (req.method === 'OPTIONS') {
         res.statusCode = 204;
@@ -217,7 +217,7 @@ function serve(port, host) {
         const state = health();
         return reply(res, state === 'ok' ? 200 : 503, { ok: state === 'ok', db: state, uptimeSec: Math.round(process.uptime()), version: VERSION });
       }
-      if (passphrase && !timingSafeEqual(digest(req.headers['x-gr8r-passphrase'] || ''), digest(passphrase))) {
+      if (passphrase && !timingSafeEqual(digest(req.headers['x-fleet-passphrase'] || ''), digest(passphrase))) {
         return reply(res, 401, { error: 'passphrase required' });
       }
       if (path === '/store' && req.method === 'GET') return reply(res, 200, store.document());
@@ -231,7 +231,7 @@ function serve(port, host) {
     }
   });
   server.on('error', err => {
-    console.error(JSON.stringify({ error: err.message, next: 'gr8r-axi serve --port <free port>' }));
+    console.error(JSON.stringify({ error: err.message, next: 'fleet-axi serve --port <free port>' }));
     process.exit(1);
   });
   server.listen(port, host, () => {

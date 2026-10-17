@@ -25,7 +25,7 @@ export function toast(msg, opt = {}) {
   host.appendChild(el);
   setTimeout(kill, opt.ms || 4200);
 }
-window.addEventListener('gr8r-sync-fail', () => toast("Your changes couldn't be saved.", { kind: 'err' }));
+window.addEventListener('fleet-sync-fail', () => toast("Your changes couldn't be saved.", { kind: 'err' }));
 /* guarded mutation: simulates offline failures for the "Failed to save" state */
 export function mutate(fn, label) {
   if (S.ui.offline) {

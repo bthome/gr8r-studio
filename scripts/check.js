@@ -5,17 +5,17 @@ import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-if (!existsSync(new URL('../gr8r-axi/node_modules/better-sqlite3', import.meta.url))) {
+if (!existsSync(new URL('../fleet-axi/node_modules/better-sqlite3', import.meta.url))) {
   console.error('\nThe check needs the database library. From the repo root:\n');
-  console.error('  npm --prefix gr8r-axi ci\n');
+  console.error('  npm --prefix fleet-axi ci\n');
   process.exit(1);
 }
 
-const { open } = await import('../gr8r-axi/src/db.js');
-const { Store } = await import('../gr8r-axi/src/store.js');
+const { open } = await import('../fleet-axi/src/db.js');
+const { Store } = await import('../fleet-axi/src/store.js');
 
-const dir = mkdtempSync(join(tmpdir(), 'gr8r-check-'));
-const db = open(join(dir, 'gr8r.db'));
+const dir = mkdtempSync(join(tmpdir(), 'fleet-check-'));
+const db = open(join(dir, 'fleet.db'));
 const store = new Store(db);
 store.init();
 
@@ -188,13 +188,13 @@ await checkAsync('a failed /store load keeps saves blocked', async () => {
   if (syncs().length) throw new Error(`${syncs().length} sync posts`);
 });
 await checkAsync('after /store loads, save() posts /sync with the passphrase', async () => {
-  localStorage.setItem('gr8r.passphrase', 'pw');
+  localStorage.setItem('fleet.passphrase', 'pw');
   storeReply = { ok: true, status: 200, json: () => Promise.resolve(back) };
   if ((await storeModule.loadStore()) !== true) throw new Error('load failed');
   storeModule.save();
   await settle();
   if (syncs().length !== 1) throw new Error(`${syncs().length} sync posts`);
-  if (syncs()[0].opt.headers['x-gr8r-passphrase'] !== 'pw') throw new Error('no passphrase header');
+  if (syncs()[0].opt.headers['x-fleet-passphrase'] !== 'pw') throw new Error('no passphrase header');
 });
 check('the page no longer keeps board data in localStorage', () => {
   if ('data' in JSON.parse(localStorage.getItem(storeModule.STORE_KEY) || '{}')) throw new Error('data cached');

@@ -65,12 +65,12 @@ export function settingsBody(sec, title) {
     case 'files':
       return (
         H('The folder where mate files are kept.') +
-        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="files-path">Folder</label><input class="input" id="files-path" value="${esc(d.filesPath || '')}" placeholder="/Users/you/gr8r-files"></div><button class="btn btn-primary" data-a="saveFilesPath" style="margin-top:12px">Save path</button></div>` +
-        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="bridge-pass">Bridge passphrase</label><input class="input" id="bridge-pass" type="password" autocomplete="off" value="${esc(localStorage.getItem('gr8r.passphrase') || '')}" placeholder="Only if the bridge sets GR8R_PASSPHRASE"></div><button class="btn btn-secondary" data-a="savePassphrase" style="margin-top:12px">Save passphrase</button></div>`
+        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="files-path">Folder</label><input class="input" id="files-path" value="${esc(d.filesPath || '')}" placeholder="/Users/you/fleet-files"></div><button class="btn btn-primary" data-a="saveFilesPath" style="margin-top:12px">Save path</button></div>` +
+        `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="bridge-pass">Bridge passphrase</label><input class="input" id="bridge-pass" type="password" autocomplete="off" value="${esc(localStorage.getItem('fleet.passphrase') || '')}" placeholder="Only if the bridge sets FLEET_PASSPHRASE"></div><button class="btn btn-secondary" data-a="savePassphrase" style="margin-top:12px">Save passphrase</button></div>`
       );
     case 'appearance':
       return (
-        H('Customize how Gr8r looks on this device.') +
+        H('Customize how Fleet looks on this device.') +
         `
       <div class="sblock" style="margin-top:0"><h2>Theme</h2><div class="themecards" style="margin-top:12px" role="radiogroup" aria-label="Theme">${[
         ['light', 'Light'],
@@ -239,7 +239,7 @@ export function settingsBody(sec, title) {
         H('Personal defaults for how you work.') +
         srow(
           'Open on launch',
-          'The page you see when Gr8r opens.',
+          'The page you see when Fleet opens.',
           sel(
             'home',
             [

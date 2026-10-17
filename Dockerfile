@@ -6,13 +6,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm --prefix gr8r-axi ci
+RUN npm --prefix fleet-axi ci
 
-ENV GR8R_DB=/data/gr8r.db
+ENV FLEET_DB=/data/fleet.db
 EXPOSE 5173 8787
 
 # Uses the Node already in the image. /health needs no passphrase and returns no board data.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD ["node", "-e", "fetch('http://127.0.0.1:8787/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 
-CMD ["sh", "-c", "mkdir -p /data && node gr8r-axi/bin/gr8r-axi.js init && node gr8r-axi/bin/gr8r-axi.js serve --port 8787 --host 0.0.0.0 & npx vite --host 0.0.0.0 --port 5173"]
+CMD ["sh", "scripts/docker-start.sh"]

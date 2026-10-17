@@ -1,3 +1,5 @@
+name: fleet-studio
+
 services:
   studio:
     build: .
@@ -5,11 +7,12 @@ services:
       - '127.0.0.1:5173:5173'
       - '127.0.0.1:8787:8787'
     volumes:
-      - gr8r-data:/data
+      - fleet-data:/data
     # environment:
-    #   GR8R_PASSPHRASE: change-me    # bridge then requires this; enter it once in Settings > Files
-    #   GR8R_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    #   FLEET_PASSPHRASE: change-me    # bridge then requires this; enter it once in Settings > Files
+    #   FLEET_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
     restart: unless-stopped
 
 volumes:
-  gr8r-data:
+  fleet-data:
+    name: fleet-data

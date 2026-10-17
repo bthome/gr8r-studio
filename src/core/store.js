@@ -2,7 +2,7 @@
 import { TODAY, diffD, iso, parse, uid } from './utils.js';
 import { PCOLORS, TEAMS_SEED } from './constants.js';
 
-export const STORE_KEY = 'gr8r.v2';
+export const STORE_KEY = 'fleet.v2';
 export const DEFAULT_PREFS = {
   theme: 'system',
   accent: 'indigo',
@@ -98,10 +98,10 @@ export const S = {
     drafts: {},
   },
 };
-export const bridgeUrl = path => (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + path;
+export const bridgeUrl = path => (localStorage.getItem('fleet.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + path;
 export function bridgeHeaders(extra = {}) {
-  const pass = localStorage.getItem('gr8r.passphrase');
-  return pass ? { ...extra, 'x-gr8r-passphrase': pass } : extra;
+  const pass = localStorage.getItem('fleet.passphrase');
+  return pass ? { ...extra, 'x-fleet-passphrase': pass } : extra;
 }
 export const bridgeFetch = (path, opt = {}) => fetch(bridgeUrl(path), { ...opt, headers: bridgeHeaders(opt.headers) });
 
@@ -127,12 +127,12 @@ export function save() {
     } catch {
       /* storage full or blocked: keep working in memory */
     }
-    if (!loaded) return window.dispatchEvent(new CustomEvent('gr8r-sync-fail'));
+    if (!loaded) return window.dispatchEvent(new CustomEvent('fleet-sync-fail'));
     bridgeFetch('/sync', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(S.data) })
       .then(r => {
         if (!r.ok) throw new Error(r.status);
       })
-      .catch(() => window.dispatchEvent(new CustomEvent('gr8r-sync-fail')));
+      .catch(() => window.dispatchEvent(new CustomEvent('fleet-sync-fail')));
   }, 150);
 }
 

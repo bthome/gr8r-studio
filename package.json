@@ -1,8 +1,8 @@
 {
-  "name": "gr8r-studio",
+  "name": "fleet-studio",
   "version": "1.0.0",
   "private": true,
-  "description": "Gr8r Studio: a calm, structured project management workspace.",
+  "description": "Fleet Studio: a calm, structured project management workspace.",
   "type": "module",
   "scripts": {
     "dev": "vite",

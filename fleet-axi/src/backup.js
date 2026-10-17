@@ -5,15 +5,15 @@ import { hostname } from 'node:os';
 import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 
-const NAME = /^gr8r-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z(-[a-z0-9-]+)?\.db$/;
+const NAME = /^fleet-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z(-[a-z0-9-]+)?\.db$/;
 const TABLES = ['meta', 'members', 'projects', 'tasks', 'comments'];
 const DAY = 24 * 60 * 60 * 1000;
 const HEARTBEAT = 10 * 1000;
 const STALE = 30 * 1000;
 
-export const backupDir = file => resolve(process.env.GR8R_BACKUP_DIR || join(dirname(file), 'backups'));
+export const backupDir = file => resolve(process.env.FLEET_BACKUP_DIR || join(dirname(file), 'backups'));
 export function backupKeep() {
-  const n = Number(process.env.GR8R_BACKUP_KEEP);
+  const n = Number(process.env.FLEET_BACKUP_KEEP);
   return Number.isInteger(n) && n >= 1 ? n : 14;
 }
 export const listBackups = dir =>
@@ -29,8 +29,8 @@ export function backup(db, file, { label } = {}) {
   const dir = backupDir(file);
   mkdirSync(dir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  let name = `gr8r-${stamp}${label ? '-' + label : ''}.db`;
-  for (let i = 1; existsSync(join(dir, name)); i++) name = `gr8r-${stamp}-${i}${label ? '-' + label : ''}.db`;
+  let name = `fleet-${stamp}${label ? '-' + label : ''}.db`;
+  for (let i = 1; existsSync(join(dir, name)); i++) name = `fleet-${stamp}-${i}${label ? '-' + label : ''}.db`;
   const target = join(dir, name);
   const partial = target + '.partial';
   rmSync(partial, { force: true });
@@ -64,7 +64,7 @@ export function validate(src) {
   const have = new Set(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").pluck().all());
   db.close();
   const missing = TABLES.filter(t => !have.has(t));
-  if (missing.length) throw new Error(`${src} is not a Gr8r database, missing tables: ${missing.join(', ')}`);
+  if (missing.length) throw new Error(`${src} is not a Fleet database, missing tables: ${missing.join(', ')}`);
 }
 
 // The bridge keeps a small lock file next to the database and touches it every 10 seconds.
@@ -148,13 +148,13 @@ export function restore(file, src, { open, force = false }) {
   const db = open(file);
   const check = db.pragma('quick_check', { simple: true });
   db.close();
-  if (check !== 'ok') throw new Error(`restored database failed its check: ${check}${preRestore ? `. Undo with: gr8r-axi restore ${preRestore}` : ''}`);
+  if (check !== 'ok') throw new Error(`restored database failed its check: ${check}${preRestore ? `. Undo with: fleet-axi restore ${preRestore}` : ''}`);
   return { restored: file, from: src, preRestore };
 }
 
 // At most one automatic backup a day, so a restart loop cannot push good backups out of the keep window.
 export function autoBackup(db, file, log = console.error) {
-  if (/^(0|off|false|no)$/i.test(process.env.GR8R_AUTO_BACKUP || '')) return null;
+  if (/^(0|off|false|no)$/i.test(process.env.FLEET_AUTO_BACKUP || '')) return null;
   const run = () => {
     try {
       const dir = backupDir(file);
@@ -172,7 +172,7 @@ export function autoBackup(db, file, log = console.error) {
   return timer;
 }
 
-export const exportDir = file => resolve(process.env.GR8R_EXPORT_DIR || join(dirname(file), 'exports'));
+export const exportDir = file => resolve(process.env.FLEET_EXPORT_DIR || join(dirname(file), 'exports'));
 
 // Every row of every table, read in one transaction so the export is one consistent snapshot.
 // BLOB values become { $base64: '...' } so the document stays valid JSON.
@@ -188,7 +188,7 @@ export function exportDocument(db) {
       tables[name] = rows.map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, cell(v)])));
     }
     return {
-      format: 'gr8r-export',
+      format: 'fleet-export',
       version: 1,
       exportedAt: new Date().toISOString(),
       schemaVersion: db.pragma('user_version', { simple: true }),
@@ -202,8 +202,8 @@ export function writeExport(db, file, out) {
   let target = out ? resolve(out) : null;
   if (!target) {
     const dir = exportDir(file);
-    target = join(dir, `gr8r-export-${new Date().toISOString().replace(/[:.]/g, '-')}.json.gz`);
-    for (let i = 1; existsSync(target); i++) target = join(dir, `gr8r-export-${new Date().toISOString().replace(/[:.]/g, '-')}-${i}.json.gz`);
+    target = join(dir, `fleet-export-${new Date().toISOString().replace(/[:.]/g, '-')}.json.gz`);
+    for (let i = 1; existsSync(target); i++) target = join(dir, `fleet-export-${new Date().toISOString().replace(/[:.]/g, '-')}-${i}.json.gz`);
   }
   mkdirSync(dirname(target), { recursive: true });
   const doc = exportDocument(db);
