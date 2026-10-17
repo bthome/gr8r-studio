@@ -3,8 +3,24 @@
    ===================================================================== */
 import { $, $$, TODAY, addD, dOff, esc, fmtDate, iso, parse, uid } from '../core/utils.js';
 import { PR, PSTAT, ST } from '../core/constants.js';
-import { seed } from '../data/seed.js';
-import { D, DEFAULT_PREFS, S, allTasks, canSee, commentsOf, logAct, me, mem, proj, save, task, tasksOf, visibleProjects } from '../core/store.js';
+import {
+  D,
+  S,
+  allTasks,
+  bridgeFetch,
+  bridgeHeaders,
+  loadStore,
+  canSee,
+  commentsOf,
+  logAct,
+  me,
+  mem,
+  proj,
+  save,
+  task,
+  tasksOf,
+  visibleProjects,
+} from '../core/store.js';
 import { fileType, fsize } from '../ui/helpers.js';
 import { effectiveDark } from '../core/theme.js';
 import { mutate, toast } from '../ui/toast.js';
@@ -807,7 +823,7 @@ A.previewFile = el => {
     setTimeout(() => {
       const box = document.querySelector('.md[data-src]');
       if (!box) return;
-      fetch(box.dataset.src)
+      fetch(box.dataset.src, { headers: bridgeHeaders() })
         .then(r => r.text())
         .then(t => (box.textContent = t))
         .catch(() => (box.textContent = 'Could not open the file.'));
@@ -1699,25 +1715,6 @@ A.retryOnline = el => {
     toast('Reconnected. All changes are synced.');
   }, 700);
 };
-A.resetDemo = () => {
-  S.ui.pop = null;
-  confirmDlg({
-    title: 'Reset demo data?',
-    body: 'All projects, tasks, and settings in this browser go back to the original sample workspace.',
-    ok: 'Reset data',
-    danger: true,
-    icon: 'rotate-ccw',
-    run: () => {
-      S.data = seed();
-      S.views = {};
-      S.prefs = { ...DEFAULT_PREFS, theme: S.prefs.theme };
-      S.ui.drawer = null;
-      save();
-      go('home');
-      toast('Demo data restored');
-    },
-  });
-};
 A.toastInfo = el => toast(el.dataset.msg, { kind: 'info' });
 A.demoToast = el => {
   const v = el.dataset.v;
@@ -1804,8 +1801,7 @@ A.wsColor = el => {
 A.saveFilesPath = () => {
   const path = $('#files-path').value.trim();
   if (!path) return toast('Enter a folder path', { kind: 'err' });
-  const bridge = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '');
-  fetch(bridge + '/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path }) })
+  bridgeFetch('/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path }) })
     .then(r => r.json())
     .then(j => {
       if (j.error) return toast(j.error, { kind: 'err' });
@@ -1814,6 +1810,15 @@ A.saveFilesPath = () => {
       render();
     })
     .catch(() => toast('Bridge is not running', { kind: 'err' }));
+};
+A.savePassphrase = () => {
+  const pass = $('#bridge-pass').value;
+  if (pass) localStorage.setItem('gr8r.passphrase', pass);
+  else localStorage.removeItem('gr8r.passphrase');
+  loadStore().then(ok => {
+    toast(ok ? 'Passphrase saved. Board loaded.' : "Passphrase saved, but the bridge didn't accept it.", { kind: ok ? 'ok' : 'err' });
+    render();
+  });
 };
 A.saveWorkspace = () => {
   const n = $('#ws-name').value.trim();
@@ -1838,22 +1843,6 @@ A.saveWorkspace = () => {
       toast('Workspace settings saved');
   });
 };
-A.delWorkspace = () =>
-  confirmDlg({
-    title: `Delete ${D().ws.name}?`,
-    body: 'Every project, task, file, and comment in this workspace will be permanently deleted for all members.',
-    ok: 'Delete workspace',
-    danger: true,
-    typeName: D().ws.name,
-    run: () => {
-      S.data = seed();
-      S.views = {};
-      save();
-      S.ui.auth = 'login';
-      render();
-      toast('Workspace deleted. Demo data was restored for this prototype.', { kind: 'info', ms: 5000 });
-    },
-  });
 A.avColor = el => {
   me().c = el.dataset.v;
   save();

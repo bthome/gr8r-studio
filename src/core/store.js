@@ -1,7 +1,6 @@
 /* ---------- store ---------- */
 import { TODAY, diffD, iso, parse, uid } from './utils.js';
 import { PCOLORS, TEAMS_SEED } from './constants.js';
-import { seed } from '../data/seed.js';
 
 export const STORE_KEY = 'gr8r.v2';
 export const DEFAULT_PREFS = {
@@ -24,16 +23,33 @@ export function load() {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const j = JSON.parse(raw);
-      if (j && j.data && j.data.tasks) return j;
+      if (j && typeof j === 'object') return j;
     }
   } catch {
-    /* storage blocked or corrupt: start from seed data */
+    /* storage blocked or corrupt: start from default prefs */
   }
   return null;
 }
 export const saved = load();
+// Placeholder until GET /store answers. Saves are refused while this is showing.
+const emptyDoc = () => ({
+  ws: { name: 'Fleet Board', url: 'fleet', c: '#1D1C1A', brand: true },
+  me: 'm1',
+  members: [{ id: 'm1', name: DEFAULT_PREFS.name, email: '', role: 'Owner' }],
+  projects: [],
+  tasks: [],
+  comments: [],
+  activity: [],
+  notifs: [],
+  files: [],
+  events: [],
+  projOrder: [],
+  savedViews: [],
+  recentSearches: [],
+  filesPath: null,
+});
 export const S = {
-  data: saved?.data || seed(),
+  data: emptyDoc(),
   prefs: Object.assign({}, DEFAULT_PREFS, saved?.prefs || {}),
   views: saved?.views || {},
   ui: {
@@ -82,17 +98,37 @@ export const S = {
     drafts: {},
   },
 };
+export const bridgeUrl = path => (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + path;
+export function bridgeHeaders(extra = {}) {
+  const pass = localStorage.getItem('gr8r.passphrase');
+  return pass ? { ...extra, 'x-gr8r-passphrase': pass } : extra;
+}
+export const bridgeFetch = (path, opt = {}) => fetch(bridgeUrl(path), { ...opt, headers: bridgeHeaders(opt.headers) });
+
+let loaded = false;
+export function loadStore() {
+  return bridgeFetch('/store')
+    .then(r => (r.ok ? r.json() : null))
+    .then(data => {
+      if (!data || !data.projects) return false;
+      S.data = data;
+      loaded = true;
+      return true;
+    })
+    .catch(() => false);
+}
+
 export let _saveT;
 export function save() {
   clearTimeout(_saveT);
   _saveT = setTimeout(() => {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ data: S.data, prefs: S.prefs, views: S.views, collapsed: S.ui.collapsed }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ prefs: S.prefs, views: S.views, collapsed: S.ui.collapsed }));
     } catch {
       /* storage full or blocked: keep working in memory */
     }
-    const bridge = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '');
-    fetch(bridge + '/sync', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(S.data) })
+    if (!loaded) return window.dispatchEvent(new CustomEvent('gr8r-sync-fail'));
+    bridgeFetch('/sync', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(S.data) })
       .then(r => {
         if (!r.ok) throw new Error(r.status);
       })

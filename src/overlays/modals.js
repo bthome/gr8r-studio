@@ -2,7 +2,7 @@
 import { $$, MOD, esc, fmtDate } from '../core/utils.js';
 import { ic } from '../core/icons.js';
 import { PCOLORS, PICONS } from '../core/constants.js';
-import { D, S, mem, pColor, proj, task, teamsList } from '../core/store.js';
+import { D, S, bridgeUrl, mem, pColor, proj, task, teamsList } from '../core/store.js';
 import { FT, av, lbl, prPill, stPill } from '../ui/helpers.js';
 import { focusKey, render } from '../shell/render.js';
 import { teamModal } from '../features/teams.js';
@@ -254,7 +254,7 @@ export function shortcutsModal(H) {
 export function filePreviewModal(m, H) {
   const f = m.file;
   const t = FT[f.type] || FT.other;
-  const src = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + '/files/' + f.id;
+  const src = bridgeUrl('/files/' + f.id);
   const body =
     f.type === 'image'
       ? `<img src="${src}" alt="${esc(f.name)}" style="width:100%;border-radius:8px">`

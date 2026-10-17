@@ -6,7 +6,6 @@ import './styles/index.css';
 import './core/utils.js';
 import './core/icons.js';
 import './core/constants.js';
-import './data/seed.js';
 import './core/store.js';
 import './ui/helpers.js';
 import './core/theme.js';
@@ -54,7 +53,8 @@ import './features/archive.js';
 import './actions/teams.js';
 import './actions/subtasks.js';
 import './actions/archive.js';
-import { S, D } from './core/store.js';
+import { S, D, loadStore } from './core/store.js';
+import { toast } from './ui/toast.js';
 import { A } from './actions/actions.js';
 import { ROUTE_NAMES, render, go } from './shell/render.js';
 
@@ -73,16 +73,10 @@ import { ROUTE_NAMES, render, go } from './shell/render.js';
   else if (h && ROUTE_NAMES[h]) S.ui.route = h;
   else S.ui.route = S.prefs.home || 'home';
   render();
-  const bridge = localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store';
-  fetch(bridge)
-    .then(r => (r.ok ? r.json() : null))
-    .then(data => {
-      if (!data || !data.projects) return;
-      S.data = data;
-      localStorage.removeItem('gr8r.v3');
-      render();
-    })
-    .catch(() => {});
+  loadStore().then(ok => {
+    if (ok) render();
+    else toast("Couldn't load the board from the bridge. Edits won't be saved until it loads.", { kind: 'err', ms: 10000 });
+  });
 })();
 
 // Dev-only handle for debugging and screenshot tooling; stripped from production builds.
