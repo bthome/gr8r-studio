@@ -10,7 +10,11 @@ s.init();
 const t = s.createTask({ as: 'fm', project: 'PAY', title: 'Scale', fmTask: 'fm-1' });
 if (!t.key.startsWith('PAY-')) throw new Error('key');
 let denied = false;
-try { s.updateTask({ as: 'm6', key: t.key, set: { status: 'nope' } }); } catch { denied = true; }
+try {
+  s.updateTask({ as: 'm6', key: t.key, set: { status: 'nope' } });
+} catch {
+  denied = true;
+}
 if (!denied) throw new Error('catalog');
 const doc = s.document();
 if (!doc.tasks.length) throw new Error('bridge');

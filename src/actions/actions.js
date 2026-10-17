@@ -807,7 +807,10 @@ A.previewFile = el => {
     setTimeout(() => {
       const box = document.querySelector('.md[data-src]');
       if (!box) return;
-      fetch(box.dataset.src).then(r => r.text()).then(t => (box.textContent = t)).catch(() => (box.textContent = 'Could not open the file.'));
+      fetch(box.dataset.src)
+        .then(r => r.text())
+        .then(t => (box.textContent = t))
+        .catch(() => (box.textContent = 'Could not open the file.'));
     }, 50);
   }
 };

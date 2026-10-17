@@ -1,9 +1,9 @@
 /* ---------------- MODALS ---------------- */
-import { $$, MOD, ago, esc, fmtDate } from '../core/utils.js';
+import { $$, MOD, esc, fmtDate } from '../core/utils.js';
 import { ic } from '../core/icons.js';
 import { PCOLORS, PICONS } from '../core/constants.js';
 import { D, S, mem, pColor, proj, task, teamsList } from '../core/store.js';
-import { FT, av, filePrev, lbl, prPill, stPill } from '../ui/helpers.js';
+import { FT, av, lbl, prPill, stPill } from '../ui/helpers.js';
 import { focusKey, render } from '../shell/render.js';
 import { teamModal } from '../features/teams.js';
 
@@ -90,9 +90,21 @@ export function taskModal(m, H) {
 }
 export const TEMPLATES = [
   { id: 'blank', name: 'Blank', icon: 'file', desc: 'No starter tasks', tasks: [] },
-  { id: 'incident', name: 'Incident', icon: 'siren', desc: 'Something is broken now', tasks: ['Confirm the impact', 'Restore the service', 'Write the postmortem'] },
+  {
+    id: 'incident',
+    name: 'Incident',
+    icon: 'siren',
+    desc: 'Something is broken now',
+    tasks: ['Confirm the impact', 'Restore the service', 'Write the postmortem'],
+  },
   { id: 'problem', name: 'Problem', icon: 'search', desc: 'Find the cause', tasks: ['Gather the symptoms', 'Find the root cause', 'Propose the fix'] },
-  { id: 'service', name: 'Service request', icon: 'hand-helping', desc: 'A requested change of access or setup', tasks: ['Confirm the request', 'Make the change', 'Confirm it works'] },
+  {
+    id: 'service',
+    name: 'Service request',
+    icon: 'hand-helping',
+    desc: 'A requested change of access or setup',
+    tasks: ['Confirm the request', 'Make the change', 'Confirm it works'],
+  },
   { id: 'change', name: 'Change', icon: 'git-branch', desc: 'A planned change', tasks: ['Write the plan', 'Review the risk', 'Apply the change', 'Verify'] },
 ];
 export function projectModal(m, H) {
@@ -243,11 +255,12 @@ export function filePreviewModal(m, H) {
   const f = m.file;
   const t = FT[f.type] || FT.other;
   const src = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '') + '/files/' + f.id;
-  const body = f.type === 'image'
-    ? `<img src="${src}" alt="${esc(f.name)}" style="width:100%;border-radius:8px">`
-    : f.type === 'doc' || /\.md$/i.test(f.name)
-      ? `<div class="md" data-src="${src}" style="white-space:pre-wrap;font-size:13.5px;line-height:1.5">Loading…</div>`
-      : `<p class="muted">This file is on disk. Open it from the folder set in Settings.</p>`;
+  const body =
+    f.type === 'image'
+      ? `<img src="${src}" alt="${esc(f.name)}" style="width:100%;border-radius:8px">`
+      : f.type === 'doc' || /\.md$/i.test(f.name)
+        ? `<div class="md" data-src="${src}" style="white-space:pre-wrap;font-size:13.5px;line-height:1.5">Loading…</div>`
+        : `<p class="muted">This file is on disk. Open it from the folder set in Settings.</p>`;
   return `${H(esc(f.name), `${t.n} · ${f.size || ''} · ${esc(mem(f.by)?.name || '')}`)}
   <div class="modal-b">${body}</div>
   <div class="modal-f"><span class="sp"></span><button class="btn btn-primary" data-a="closeModal">Close</button></div>`;

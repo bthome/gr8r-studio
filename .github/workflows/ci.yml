@@ -17,4 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
+      - run: npm --prefix gr8r-axi ci
+      - run: npm run check
+      - run: npm --prefix gr8r-axi test
       - run: npm run build

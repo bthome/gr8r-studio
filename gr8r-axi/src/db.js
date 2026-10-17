@@ -57,7 +57,13 @@ export function open(file) {
     );
     CREATE TABLE IF NOT EXISTS applied (id TEXT PRIMARY KEY, at INTEGER);
   `);
-  const add = (sql) => { try { db.exec(sql); } catch { /* column exists */ } };
+  const add = sql => {
+    try {
+      db.exec(sql);
+    } catch {
+      /* column exists */
+    }
+  };
   add('ALTER TABLE files ADD COLUMN path TEXT');
   add('ALTER TABLE tasks ADD COLUMN start TEXT');
   add('ALTER TABLE tasks ADD COLUMN fav INTEGER DEFAULT 0');
