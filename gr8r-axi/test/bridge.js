@@ -1,7 +1,7 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
-import { createServer } from 'node:net';
+import { connect, createServer } from 'node:net';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -97,6 +97,16 @@ await check('a foreign origin cannot POST /sync', async () =>
   expect((await send(p, { method: 'POST', path: '/sync', headers: { ...json, origin: 'https://evil.example' }, body: '{}' })).status, 403),
 );
 await check('a rebound host name gets 403', async () => expect((await send(p, { headers: { host: `evil.example:${p}` } })).status, 403));
+await check('a request with no host header gets 403', async () => {
+  const raw = await new Promise((resolve, reject) => {
+    const sock = connect(p, '127.0.0.1', () => sock.end('GET /store HTTP/1.0\r\n\r\n'));
+    let text = '';
+    sock.on('data', c => (text += c));
+    sock.on('end', () => resolve(text));
+    sock.on('error', reject);
+  });
+  expect(raw.split(' ')[1], '403');
+});
 await check('text/plain POST gets 415', async () =>
   expect((await send(p, { method: 'POST', path: '/sync', headers: { origin: STUDIO, 'content-type': 'text/plain' }, body: '{}' })).status, 415),
 );

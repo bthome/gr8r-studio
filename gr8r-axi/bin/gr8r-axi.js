@@ -82,7 +82,10 @@ function serve(port, host) {
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
-  const extraHosts = (process.env.GR8R_ALLOWED_HOSTS || '').split(',').map(h => h.trim().toLowerCase());
+  const extraHosts = (process.env.GR8R_ALLOWED_HOSTS || '')
+    .split(',')
+    .map(h => h.trim().toLowerCase())
+    .filter(Boolean);
   const passphrase = process.env.GR8R_PASSPHRASE || '';
   const digest = s => createHash('sha256').update(String(s)).digest();
   const TYPES = {
