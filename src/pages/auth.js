@@ -20,7 +20,7 @@ export const icls = k => (S.ui.errors[k] ? 'is-error' : '');
 export function renderAuth() {
   const s = S.ui.auth;
   const e = S.ui.errors;
-  const f = S.ui.af || (S.ui.af = { email: 'hello@gr8rstudio.com', name: '' });
+  const f = S.ui.af || (S.ui.af = { email: 'you@example.com', name: '' });
   if (s === 'onboarding') return renderOnboarding();
   if (s === 'login')
     return authShell(
@@ -101,8 +101,8 @@ export function renderOnboarding() {
   if (st === 1) {
     const e = S.ui.errors.ws;
     body = `<h1>Create your workspace</h1><p class="sub">A workspace is where your team's projects live.</p>
-    <div class="field"><label class="label" for="o-ws">Workspace name</label><input class="input input-lg ${e ? 'is-error' : ''}" id="o-ws" data-in="onbWs" value="${esc(o.ws)}" placeholder="e.g. Gr8r Studio" autofocus>${e ? `<span class="err">${ic('circle-alert', 12)}${e}</span>` : ''}</div>
-    <div class="field"><label class="label" for="o-url">Workspace URL</label><div class="row" style="gap:0"><span class="input input-lg" style="width:auto;background:var(--surface-2);border-right:0;border-radius:6px 0 0 6px;display:flex;align-items:center;color:var(--text-2)">gr8rstudio.com/</span><input class="input input-lg" id="o-url" value="${esc(o.url || '')}" data-in="onbUrl" style="border-radius:0 6px 6px 0" placeholder="gr8rstudio"></div>${o.url ? `<span class="hint" style="color:var(--green);display:flex;gap:4px;align-items:center">${ic('check', 12)}gr8rstudio.com/${esc(o.url)} is available</span>` : ''}</div>${nav()}`;
+    <div class="field"><label class="label" for="o-ws">Workspace name</label><input class="input input-lg ${e ? 'is-error' : ''}" id="o-ws" data-in="onbWs" value="${esc(o.ws)}" placeholder="e.g. Fleet Studio" autofocus>${e ? `<span class="err">${ic('circle-alert', 12)}${e}</span>` : ''}</div>
+    <div class="field"><label class="label" for="o-url">Workspace URL</label><div class="row" style="gap:0"><span class="input input-lg" style="width:auto;background:var(--surface-2);border-right:0;border-radius:6px 0 0 6px;display:flex;align-items:center;color:var(--text-2)">${esc(location.host)}/</span><input class="input input-lg" id="o-url" value="${esc(o.url || '')}" data-in="onbUrl" style="border-radius:0 6px 6px 0" placeholder="my-workspace"></div>${o.url ? `<span class="hint" style="color:var(--green);display:flex;gap:4px;align-items:center">${ic('check', 12)}${esc(location.host)}/${esc(o.url)} is available</span>` : ''}</div>${nav()}`;
   }
   if (st === 2)
     body = `<h1>How does your team work?</h1><p class="sub">We'll set your default project view.</p><div class="opts" role="radiogroup" style="grid-template-columns:repeat(2,minmax(0,1fr))">${[
@@ -121,12 +121,12 @@ export function renderOnboarding() {
       .map(t => opt('tmpl', t.id, t.icon, t.name, t.tasks.length + ' starter tasks'))
       .join('')}</div>${nav()}`;
   if (st === 4)
-    body = `<h1>Invite your team</h1><p class="sub">Gr8r works best with your teammates. They'll get an email invite.</p><div class="col" style="gap:8px">${[0, 1, 2].map(i => `<input class="input input-lg" id="o-inv-${i}" placeholder="teammate@company.com" type="email" value="${esc((o.invites || '').split(',')[i] || '')}" data-in="onbInv" data-i="${i}" aria-label="Teammate email ${i + 1}">`).join('')}</div><button class="btn btn-ghost btn-sm" style="align-self:flex-start" data-a="copyInviteLink">${ic('link', 13)}Copy invite link instead</button>${nav('Send invites', true)}`;
+    body = `<h1>Invite your team</h1><p class="sub">Fleet works best with your teammates. They'll get an email invite.</p><div class="col" style="gap:8px">${[0, 1, 2].map(i => `<input class="input input-lg" id="o-inv-${i}" placeholder="teammate@company.com" type="email" value="${esc((o.invites || '').split(',')[i] || '')}" data-in="onbInv" data-i="${i}" aria-label="Teammate email ${i + 1}">`).join('')}</div><button class="btn btn-ghost btn-sm" style="align-self:flex-start" data-a="copyInviteLink">${ic('link', 13)}Copy invite link instead</button>${nav('Send invites', true)}`;
   if (st === 5) {
     const n = (o.invites || '').split(',').filter(x => x.includes('@')).length;
     body = `<div style="display:flex;justify-content:center"><span class="ftype ready-badge" style="--c:var(--green);width:48px;height:48px;border-radius:12px">${ic('circle-check', 22)}</span></div><h1>Your workspace is ready</h1><p class="sub">Here's what we set up for you.</p>
     <div class="panel">${[
-      ['building-2', `Workspace “${esc(o.ws || 'My Workspace')}”`, 'gr8rstudio.com/' + esc(o.url || 'workspace')],
+      ['building-2', `Workspace “${esc(o.ws || 'My Workspace')}”`, esc(location.host) + '/' + esc(o.url || 'workspace')],
       [
         TEMPLATES.find(t => t.id === o.tmpl)?.icon || 'folder',
         `Project “${esc(o.proj)}”`,

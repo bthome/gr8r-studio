@@ -1,14 +1,14 @@
 {
-  "name": "gr8r-axi",
+  "name": "fleet-axi",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AXI for the Gr8r Studio store. SQLite is the source of truth. The page reads a JSON document.",
+  "description": "AXI for the Fleet Studio store. SQLite is the source of truth. The page reads a JSON document.",
   "bin": {
-    "gr8r-axi": "./bin/gr8r-axi.js"
+    "fleet-axi": "./bin/fleet-axi.js"
   },
   "scripts": {
-    "start": "node bin/gr8r-axi.js serve",
+    "start": "node bin/fleet-axi.js serve",
     "test": "node test/smoke.js && node test/bridge.js && node test/task-project.js && node test/health-backup.js"
   },
   "dependencies": {

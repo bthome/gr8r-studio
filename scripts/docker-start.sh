@@ -2,8 +2,8 @@
 # Container entry point. Runs the bridge and the Studio, forwards docker stop's SIGTERM to both so the bridge
 # exits cleanly (and drops its lock file), and exits if either one dies so Docker's restart policy can act.
 mkdir -p /data
-node gr8r-axi/bin/gr8r-axi.js init || exit 1
-node gr8r-axi/bin/gr8r-axi.js serve --port 8787 --host 0.0.0.0 &
+node fleet-axi/bin/fleet-axi.js init || exit 1
+node fleet-axi/bin/fleet-axi.js serve --port 8787 --host 0.0.0.0 &
 bridge=$!
 node_modules/.bin/vite --host 0.0.0.0 --port 5173 &
 studio=$!

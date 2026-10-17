@@ -9,7 +9,7 @@ export default [
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.browser } },
   },
   {
-    files: ['vite.config.js', 'eslint.config.js', 'scripts/**/*.js', 'gr8r-axi/**/*.js'],
+    files: ['vite.config.js', 'eslint.config.js', 'scripts/**/*.js', 'fleet-axi/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
   },
 ];

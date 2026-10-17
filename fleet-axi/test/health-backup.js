@@ -7,7 +7,7 @@ import { gunzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 
-const bin = new URL('../bin/gr8r-axi.js', import.meta.url).pathname;
+const bin = new URL('../bin/fleet-axi.js', import.meta.url).pathname;
 let failed = 0;
 
 async function check(name, fn) {
@@ -46,9 +46,9 @@ function send(port, { path = '/health', headers = {}, host = '127.0.0.1' } = {})
 }
 
 function setup(extra = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'gr8r-backup-'));
-  const env = { ...process.env, GR8R_DB: join(dir, 'gr8r.db'), ...extra };
-  for (const k of ['GR8R_PASSPHRASE', 'GR8R_ALLOWED_ORIGINS', 'GR8R_HOST', 'GR8R_BACKUP_DIR', 'GR8R_BACKUP_KEEP', 'GR8R_AUTO_BACKUP'])
+  const dir = mkdtempSync(join(tmpdir(), 'fleet-backup-'));
+  const env = { ...process.env, FLEET_DB: join(dir, 'fleet.db'), ...extra };
+  for (const k of ['FLEET_PASSPHRASE', 'FLEET_ALLOWED_ORIGINS', 'FLEET_HOST', 'FLEET_BACKUP_DIR', 'FLEET_BACKUP_KEEP', 'FLEET_AUTO_BACKUP'])
     if (!(k in extra)) delete env[k];
   const run = (...a) => {
     try {
@@ -90,8 +90,8 @@ const list = dir =>
 
 console.log('\nHealth');
 {
-  const { env, dir } = setup({ GR8R_AUTO_BACKUP: 'off' });
-  const a = await serve(env, { GR8R_PASSPHRASE: 'pw-for-test' });
+  const { env, dir } = setup({ FLEET_AUTO_BACKUP: 'off' });
+  const a = await serve(env, { FLEET_PASSPHRASE: 'pw-for-test' });
   await check('GET /health answers 200 ok without the passphrase', async () => {
     const r = await send(a.port);
     expect(r.status, 200);
@@ -109,7 +109,7 @@ console.log('\nHealth');
   await check('/health still enforces the Host check', async () => expect((await send(a.port, { headers: { host: `evil.example:${a.port}` } })).status, 403));
   await check('/health still enforces the origin rules', async () => expect((await send(a.port, { headers: { origin: 'https://evil.example' } })).status, 403));
   await check('/health answers 503 when the database file is gone', async () => {
-    rmSync(join(dir, 'gr8r.db'));
+    rmSync(join(dir, 'fleet.db'));
     const r = await send(a.port);
     expect(r.status, 503);
     const body = JSON.parse(r.text);
@@ -127,11 +127,11 @@ console.log('\nBackup');
     const r = run('backup', '--json');
     if (r.error) throw new Error(r.error);
     expect(list(backups).length, 1, 'backups');
-    if (!/^gr8r-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z.*\.db$/.test(list(backups)[0])) throw new Error(`name ${list(backups)[0]}`);
+    if (!/^fleet-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z.*\.db$/.test(list(backups)[0])) throw new Error(`name ${list(backups)[0]}`);
     expect(r.file, join(backups, list(backups)[0]), 'reported file');
   });
   await check('a backup taken during concurrent writes opens cleanly and has the data', async () => {
-    const writer = new Database(join(dir, 'gr8r.db'));
+    const writer = new Database(join(dir, 'fleet.db'));
     writer.pragma('busy_timeout = 5000');
     const ins = writer.prepare("INSERT INTO tasks (id, key, project, title, status) VALUES (?, ?, 'p8', ?, 'todo')");
     for (let i = 0; i < 200; i++) ins.run(`seed-${i}`, `SEED-${i}`, `seed ${i}`);
@@ -160,11 +160,11 @@ console.log('\nBackup');
     for (let i = 0; i < 200; i++) if (!t.includes(`seed ${i}`)) throw new Error(`seed ${i} missing`);
     if (n < 1) throw new Error('no concurrent writes happened');
   });
-  await check('pruning keeps exactly GR8R_BACKUP_KEEP newest', async () => {
-    for (const k of ['2020-01-01T00-00-00-000Z', '2020-01-02T00-00-00-000Z', '2020-01-03T00-00-00-000Z']) writeFileSync(join(backups, `gr8r-${k}.db`), '');
+  await check('pruning keeps exactly FLEET_BACKUP_KEEP newest', async () => {
+    for (const k of ['2020-01-01T00-00-00-000Z', '2020-01-02T00-00-00-000Z', '2020-01-03T00-00-00-000Z']) writeFileSync(join(backups, `fleet-${k}.db`), '');
     writeFileSync(join(backups, 'notes.txt'), 'not a backup');
     const before = list(backups);
-    const env3 = { ...env, GR8R_BACKUP_KEEP: '3' };
+    const env3 = { ...env, FLEET_BACKUP_KEEP: '3' };
     const r = JSON.parse(execFileSync('node', [bin, 'backup', '--json'], { env: env3 }).toString());
     const after = list(backups);
     expect(after.length, 3, 'kept');
@@ -172,16 +172,16 @@ console.log('\nBackup');
     expect(after.join(), want.join(), 'kept files');
     if (!existsSync(join(backups, 'notes.txt'))) throw new Error('pruned a file that is not a backup');
   });
-  await check('GR8R_BACKUP_DIR moves the backups', async () => {
+  await check('FLEET_BACKUP_DIR moves the backups', async () => {
     const other = join(dir, 'elsewhere');
-    const r = JSON.parse(execFileSync('node', [bin, 'backup', '--json'], { env: { ...env, GR8R_BACKUP_DIR: other } }).toString());
+    const r = JSON.parse(execFileSync('node', [bin, 'backup', '--json'], { env: { ...env, FLEET_BACKUP_DIR: other } }).toString());
     if (!r.file.startsWith(other + '/')) throw new Error(`wrote ${r.file}`);
   });
 }
 
 console.log('\nFinding backups');
 {
-  const { env, run, backups } = setup({ GR8R_AUTO_BACKUP: 'off' });
+  const { env, run, backups } = setup({ FLEET_AUTO_BACKUP: 'off' });
   const text = (...a) =>
     execFileSync('node', [bin, ...a], { env })
       .toString()
@@ -207,10 +207,10 @@ console.log('\nFinding backups');
 
 console.log('\nExport');
 {
-  const { env, run, dir } = setup({ GR8R_AUTO_BACKUP: 'off' });
+  const { env, run, dir } = setup({ FLEET_AUTO_BACKUP: 'off' });
   const task = run('task', 'create', '--as', 'fm', '--project', 'PAY', '--title', 'export round trip', '--fm_task', 'fm-export-1');
   run('comment', 'add', '--as', 'fm', '--task', task.key, '--text', 'synthetic comment');
-  const raw = new Database(join(dir, 'gr8r.db'));
+  const raw = new Database(join(dir, 'fleet.db'));
   raw.exec('CREATE TABLE blobs (id TEXT PRIMARY KEY, data BLOB)');
   raw.prepare('INSERT INTO blobs VALUES (?, ?)').run('b1', Buffer.from([0, 1, 2, 255]));
   const counts = Object.fromEntries(
@@ -229,7 +229,7 @@ console.log('\nExport');
     if (r.error) throw new Error(r.error);
     if (!r.file.startsWith(join(dir, 'exports') + '/') || !r.file.endsWith('.json.gz')) throw new Error(`file ${r.file}`);
     doc = JSON.parse(gunzipSync(readFileSync(r.file)).toString('utf8'));
-    expect(doc.format, 'gr8r-export', 'format');
+    expect(doc.format, 'fleet-export', 'format');
     expect(doc.version, 1, 'version');
     if (Number.isNaN(Date.parse(doc.exportedAt))) throw new Error('exportedAt');
   });
@@ -270,16 +270,16 @@ console.log('\nAutomatic backup');
     expect(list(backups).length, 1, 'backups');
   });
   await b.stop();
-  const c = setup({ GR8R_AUTO_BACKUP: 'off' });
+  const c = setup({ FLEET_AUTO_BACKUP: 'off' });
   const d = await serve(c.env);
-  await check('GR8R_AUTO_BACKUP=off turns it off', async () => {
+  await check('FLEET_AUTO_BACKUP=off turns it off', async () => {
     await sleep(300);
     expect(list(c.backups).length, 0, 'backups');
   });
   await d.stop();
   const e = setup();
   writeFileSync(join(e.dir, 'not-a-dir'), '');
-  const f = await serve(e.env, { GR8R_BACKUP_DIR: join(e.dir, 'not-a-dir', 'backups') });
+  const f = await serve(e.env, { FLEET_BACKUP_DIR: join(e.dir, 'not-a-dir', 'backups') });
   await check('a failed automatic backup is logged and the bridge keeps serving', async () => {
     await sleep(300);
     expect((await send(f.port)).status, 200);
@@ -290,7 +290,7 @@ console.log('\nAutomatic backup');
 
 console.log('\nRestore');
 {
-  const { env, run, dir, backups } = setup({ GR8R_AUTO_BACKUP: 'off' });
+  const { env, run, dir, backups } = setup({ FLEET_AUTO_BACKUP: 'off' });
   run('task', 'create', '--as', 'fm', '--project', 'PAY', '--title', 'before backup');
   const snap = run('backup', '--json').file;
   run('task', 'create', '--as', 'fm', '--project', 'PAY', '--title', 'after backup');
@@ -298,7 +298,7 @@ console.log('\nRestore');
     writeFileSync(join(dir, 'junk.db'), 'not sqlite');
     const r = run('restore', join(dir, 'junk.db'));
     if (!/not a readable/.test(r.error || '')) throw new Error(r.error || 'restored junk');
-    if (!titles(join(dir, 'gr8r.db')).includes('after backup')) throw new Error('database changed');
+    if (!titles(join(dir, 'fleet.db')).includes('after backup')) throw new Error('database changed');
   });
   await check('restore refuses a SQLite file without the board tables', async () => {
     const other = new Database(join(dir, 'other.db'));
@@ -312,12 +312,12 @@ console.log('\nRestore');
     const r = run('restore', snap);
     await a.stop();
     if (!/bridge/.test(r.error || '')) throw new Error(r.error || 'restored under a running bridge');
-    if (!titles(join(dir, 'gr8r.db')).includes('after backup')) throw new Error('database changed');
+    if (!titles(join(dir, 'fleet.db')).includes('after backup')) throw new Error('database changed');
   });
   await check('restore round-trips and keeps a pre-restore backup', async () => {
     const r = run('restore', snap);
     if (r.error) throw new Error(r.error);
-    const now = titles(join(dir, 'gr8r.db'));
+    const now = titles(join(dir, 'fleet.db'));
     if (!now.includes('before backup') || now.includes('after backup')) throw new Error(`titles ${now.join('|')}`);
     const pre = list(backups).find(n => n.includes('pre-restore'));
     if (!pre) throw new Error('no pre-restore backup');
@@ -328,7 +328,7 @@ console.log('\nRestore');
     const pre = list(backups).find(n => n.includes('pre-restore'));
     const r = run('restore', join(backups, pre));
     if (r.error) throw new Error(r.error);
-    if (!titles(join(dir, 'gr8r.db')).includes('after backup')) throw new Error('undo failed');
+    if (!titles(join(dir, 'fleet.db')).includes('after backup')) throw new Error('undo failed');
   });
   await check('the CLI works on the restored database', async () => {
     const t = run('task', 'create', '--as', 'fm', '--project', 'PAY', '--title', 'after restore');

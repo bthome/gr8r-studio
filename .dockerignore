@@ -1,7 +1,7 @@
 node_modules
-gr8r-axi/node_modules
-gr8r-axi/*.db
+fleet-axi/node_modules
+fleet-axi/*.db
 dist
 .DS_Store
-gr8r-axi/backups
-gr8r-axi/exports
+fleet-axi/backups
+fleet-axi/exports

@@ -30,7 +30,7 @@ export class Store {
       this.db.prepare('INSERT INTO project_members (project, member) VALUES (?, ?)').run('p8', 'm6');
       this.db.prepare('INSERT INTO meta (k, v) VALUES (?, ?)').run('ready', '1');
     });
-    return { ok: true, next: 'gr8r-axi task create --as fm --project PAY --title "..."' };
+    return { ok: true, next: 'fleet-axi task create --as fm --project PAY --title "..."' };
   }
 
   nextKey(projectId) {

@@ -1,4 +1,4 @@
-# Gr8r Studio
+# Fleet Studio
 
 A calm, structured project management workspace: home dashboard, inbox, my tasks, projects with
 board / list / table / calendar / timeline / files views, members, teams, activity and settings.
@@ -6,9 +6,9 @@ board / list / table / calendar / timeline / files views, members, teams, activi
 Built with plain JavaScript ES modules and CSS, bundled by [Vite](https://vite.dev). There is no
 UI framework and no runtime dependency.
 
-This fork is the working repo. Mail, login, access requests, and billing are removed. Notifications are firstmate signals. The store is `gr8r-axi/`. See `gr8r-axi/AGENT-README.md`. To run the studio with the bridge, and for who can reach the bridge, see `DOCKER.md`.
+This fork is the working repo. Mail, login, access requests, and billing are removed. Notifications are firstmate signals. The store is `fleet-axi/`. See `fleet-axi/AGENT-README.md`. To run the studio with the bridge, and for who can reach the bridge, see `DOCKER.md`.
 
-![Gr8r Studio home dashboard](docs/preview.png)
+![Fleet Studio home dashboard](docs/preview.png)
 
 ## Getting started
 
@@ -81,3 +81,7 @@ Every push and pull request runs lint, the format check and a production build
 ## Deploy
 
 `vercel.json` builds with Vite and serves `dist/`.
+
+## Attribution
+
+Fleet Studio is based on Gr8r Studio by gr8rstudio (https://github.com/gr8rstudio/gr8r-studio), © 2026 Gr8r Studio. The UI design, wordmark and code come from that project. The upstream repository has no license file.

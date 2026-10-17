@@ -6,9 +6,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm --prefix gr8r-axi ci
+RUN npm --prefix fleet-axi ci
 
-ENV GR8R_DB=/data/gr8r.db
+ENV FLEET_DB=/data/fleet.db
 EXPOSE 5173 8787
 
 # Uses the Node already in the image. /health needs no passphrase and returns no board data.

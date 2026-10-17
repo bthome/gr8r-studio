@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { open } from '../src/db.js';
 import { Store } from '../src/store.js';
 
-const db = open(join(mkdtempSync(join(tmpdir(), 'gr8r-')), 't.db'));
+const db = open(join(mkdtempSync(join(tmpdir(), 'fleet-')), 't.db'));
 const s = new Store(db);
 s.init();
 const t = s.createTask({ as: 'fm', project: 'PAY', title: 'Scale', fmTask: 'fm-1' });

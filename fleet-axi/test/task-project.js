@@ -4,8 +4,8 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const bin = new URL('../bin/gr8r-axi.js', import.meta.url).pathname;
-const env = { ...process.env, GR8R_DB: join(mkdtempSync(join(tmpdir(), 'gr8r-task-')), 'gr8r.db') };
+const bin = new URL('../bin/fleet-axi.js', import.meta.url).pathname;
+const env = { ...process.env, FLEET_DB: join(mkdtempSync(join(tmpdir(), 'fleet-task-')), 'fleet.db') };
 const axi = (...a) => {
   try {
     return JSON.parse(execFileSync('node', [bin, ...a], { env, stdio: ['ignore', 'pipe', 'pipe'] }).toString());
@@ -46,7 +46,7 @@ check('a non-member is still refused', () => {
 });
 const { open } = await import('../src/db.js');
 const { Store } = await import('../src/store.js');
-const doc = new Store(open(env.GR8R_DB)).document();
+const doc = new Store(open(env.FLEET_DB)).document();
 check('every document task points at a project in the document', () => {
   const ids = new Set(doc.projects.map(p => p.id));
   const orphans = doc.tasks.filter(t => !ids.has(t.project)).map(t => t.key);

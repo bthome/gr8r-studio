@@ -482,7 +482,7 @@ A.copyLink = el => {
           : d.id && proj(d.id)
             ? `project/${proj(d.id).key.toLowerCase()}`
             : '';
-  copy(`https://gr8rstudio.com/${D().ws.url}/${path}`);
+  copy(`${location.origin}/${D().ws.url}/${path}`);
 };
 A.copyText = el => copy(el.dataset.text, 'Copied to clipboard');
 A.copyEmail = el => {
@@ -1813,8 +1813,8 @@ A.saveFilesPath = () => {
 };
 A.savePassphrase = () => {
   const pass = $('#bridge-pass').value;
-  if (pass) localStorage.setItem('gr8r.passphrase', pass);
-  else localStorage.removeItem('gr8r.passphrase');
+  if (pass) localStorage.setItem('fleet.passphrase', pass);
+  else localStorage.removeItem('fleet.passphrase');
   loadStore().then(ok => {
     toast(ok ? 'Passphrase saved. Board loaded.' : "Passphrase saved, but the bridge didn't accept it.", { kind: ok ? 'ok' : 'err' });
     render();
