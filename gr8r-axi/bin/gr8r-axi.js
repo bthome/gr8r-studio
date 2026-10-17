@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { open } from '../src/db.js';
+import { autoBackup, backup, backupDir, describeBackups, holdLock, restore, writeExport } from '../src/backup.js';
 import { Store } from '../src/store.js';
 import { CATALOG } from '../src/catalog.js';
 import { createServer } from 'node:http';
-import { createReadStream } from 'node:fs';
+import { createReadStream, readFileSync, statSync } from 'node:fs';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { extname } from 'node:path';
 
@@ -12,16 +13,19 @@ const cmd = args[0];
 const sub = args[1] && !args[1].startsWith('--') ? args[1] : undefined;
 const flags = {};
 const pos = [];
+const BOOL = new Set(['json', 'list', 'force']);
 for (let i = sub ? 2 : 1; i < args.length; i++) {
   const a = args[i];
   if (a.startsWith('--')) {
     const [k, inline] = a.slice(2).split('=');
-    flags[k] = inline ?? args[++i];
+    flags[k] = BOOL.has(k) ? inline !== 'false' : (inline ?? args[++i]);
   } else pos.push(a);
 }
 const file = process.env.GR8R_DB || new URL('../gr8r.db', import.meta.url).pathname;
-const db = open(file);
-const store = new Store(db);
+// restore must not hold the live database open while it swaps the file.
+const db = cmd === 'restore' ? null : open(file);
+const store = db && new Store(db);
+const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
 function out(data) {
   console.log(JSON.stringify(data, null, 2));
@@ -30,7 +34,7 @@ function out(data) {
 try {
   if (!cmd || cmd === 'help') {
     out({
-      commands: ['init', 'vocab', 'task', 'project', 'comment', 'doctor', 'file', 'settings', 'outbox', 'ack', 'serve'],
+      commands: ['init', 'vocab', 'task', 'project', 'comment', 'doctor', 'file', 'settings', 'outbox', 'ack', 'serve', 'backup', 'restore', 'export'],
       next: 'gr8r-axi init',
     });
   } else if (cmd === 'init') out(store.init());
@@ -67,7 +71,25 @@ try {
   else if (cmd === 'project' && sub === 'update') out(store.updateProject({ as: flags.as, key: pos[0], set: { name: flags.name, status: flags.status } }));
   else if (cmd === 'comment' && sub === 'add') out(store.addComment({ as: flags.as, task: flags.task, text: flags.text }));
   else if (cmd === 'ack') out(store.ack(sub));
-  else if (cmd === 'serve') serve(Number(flags.port || 8787), flags.host || process.env.GR8R_HOST || '127.0.0.1');
+  else if (cmd === 'backup' && flags.list) {
+    const all = describeBackups(backupDir(file));
+    if (flags.json) out(all);
+    else for (const b of all) console.log(`${b.at}  ${String(b.bytes).padStart(10)}  ${b.file}`);
+  } else if (cmd === 'backup') {
+    const r = backup(db, file);
+    if (flags.json) out(r);
+    else {
+      for (const p of r.pruned) console.log(`pruned ${p}`);
+      console.log(r.file);
+    }
+  } else if (cmd === 'export') {
+    const r = writeExport(db, file, flags.out);
+    if (flags.json) out(r);
+    else console.log(r.file);
+  } else if (cmd === 'restore') {
+    if (!sub) throw new Error('usage: gr8r-axi restore <backup file> [--force]');
+    out(restore(file, sub, { open, force: flags.force }));
+  } else if (cmd === 'serve') serve(Number(flags.port || 8787), flags.host || process.env.GR8R_HOST || '127.0.0.1');
   else {
     throw new Error(`unknown ${cmd} ${sub || ''}`);
   }
@@ -77,6 +99,17 @@ try {
 }
 
 function serve(port, host) {
+  const inode = statSync(file).ino;
+  // Healthy when the database answers and is still the file the bridge opened (not deleted or swapped underneath it).
+  const health = () => {
+    try {
+      db.prepare('SELECT count(*) FROM sqlite_master').pluck().get();
+      if (statSync(file).ino !== inode) return 'database file was replaced';
+      return 'ok';
+    } catch (err) {
+      return err.code === 'ENOENT' ? 'database file is missing' : err.message;
+    }
+  };
   const MAX_BODY = 5 * 1024 * 1024;
   const allowed = (process.env.GR8R_ALLOWED_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
     .split(',')
@@ -178,10 +211,15 @@ function serve(port, host) {
         res.statusCode = 204;
         return res.end();
       }
+      const path = new URL(req.url, 'http://bridge').pathname;
+      // /health is before the passphrase so a Docker healthcheck can call it. It returns no board data.
+      if (path === '/health' && req.method === 'GET') {
+        const state = health();
+        return reply(res, state === 'ok' ? 200 : 503, { ok: state === 'ok', db: state, uptimeSec: Math.round(process.uptime()), version: VERSION });
+      }
       if (passphrase && !timingSafeEqual(digest(req.headers['x-gr8r-passphrase'] || ''), digest(passphrase))) {
         return reply(res, 401, { error: 'passphrase required' });
       }
-      const path = new URL(req.url, 'http://bridge').pathname;
       if (path === '/store' && req.method === 'GET') return reply(res, 200, store.document());
       if (path.startsWith('/files/') && req.method === 'GET') return sendFile(res, path.slice('/files/'.length));
       if (path === '/sync' && req.method === 'POST') return readJson(req, res, doc => store.sync(doc));
@@ -196,5 +234,9 @@ function serve(port, host) {
     console.error(JSON.stringify({ error: err.message, next: 'gr8r-axi serve --port <free port>' }));
     process.exit(1);
   });
-  server.listen(port, host, () => console.log(`bridge http://${host}:${port}/store`));
+  server.listen(port, host, () => {
+    holdLock(file);
+    console.log(`bridge http://${host}:${port}/store`);
+    autoBackup(db, file);
+  });
 }
