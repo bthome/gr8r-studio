@@ -34,7 +34,7 @@ export class Store {
   }
 
   nextKey(projectId) {
-    const p = this.db.prepare('SELECT key, seq FROM projects WHERE id = ? OR key = ?').get(projectId, projectId);
+    const p = this.db.prepare('SELECT id, key, seq FROM projects WHERE id = ? OR key = ?').get(projectId, projectId);
     if (!p) throw new Error(`no project ${projectId}`);
     const seq = p.seq + 1;
     this.db.prepare('UPDATE projects SET seq = ? WHERE key = ?').run(seq, p.key);
