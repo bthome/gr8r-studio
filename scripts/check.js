@@ -114,7 +114,7 @@ check('comment add', () => {
 });
 
 console.log('\nPages against the real document');
-globalThis.navigator = { platform: 'Mac', userAgent: 'node' };
+Object.defineProperty(globalThis, 'navigator', { value: { platform: 'Mac', userAgent: 'node' }, configurable: true });
 globalThis.addEventListener = () => {};
 globalThis.window = { dispatchEvent: () => {}, addEventListener: () => {} };
 globalThis.document = {
