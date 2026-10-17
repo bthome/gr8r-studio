@@ -11,4 +11,4 @@ RUN npm --prefix gr8r-axi ci
 ENV GR8R_DB=/data/gr8r.db
 EXPOSE 5173 8787
 
-CMD ["sh", "-c", "mkdir -p /data && node gr8r-axi/bin/gr8r-axi.js init && node gr8r-axi/bin/gr8r-axi.js serve --port 8787 & npx vite --host 0.0.0.0 --port 5173"]
+CMD ["sh", "-c", "mkdir -p /data && node gr8r-axi/bin/gr8r-axi.js init && node gr8r-axi/bin/gr8r-axi.js serve --port 8787 --host 0.0.0.0 & npx vite --host 0.0.0.0 --port 5173"]

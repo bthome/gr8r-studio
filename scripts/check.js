@@ -125,9 +125,16 @@ globalThis.document = {
   createElement: () => ({ style: {}, setAttribute() {}, appendChild() {}, classList: { add() {}, remove() {} } }),
   body: { appendChild() {} },
 };
-globalThis.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
-const { S } = await import('../src/core/store.js');
-S.data = back;
+const local = new Map();
+globalThis.localStorage = { getItem: k => local.get(k) ?? null, setItem: (k, v) => local.set(k, String(v)), removeItem: k => local.delete(k) };
+const calls = [];
+let storeReply = { ok: false, status: 503, json: () => Promise.resolve(null) };
+globalThis.fetch = (url, opt = {}) => {
+  calls.push({ url, opt });
+  return Promise.resolve(url.endsWith('/store') ? storeReply : { ok: true, json: () => Promise.resolve({}) });
+};
+const storeModule = await import('../src/core/store.js');
+const { S } = storeModule;
 const pages = {
   home: (await import('../src/pages/home.js')).pageHome,
   favorites: (await import('../src/pages/favorites.js')).pageFavorites,
@@ -136,6 +143,12 @@ const pages = {
   members: (await import('../src/pages/members.js')).pageMembers,
 };
 const { searchAll } = await import('../src/pages/search.js');
+for (const [name, fn] of Object.entries(pages)) {
+  check(`page ${name} renders before the store loads`, () => {
+    if (typeof fn() !== 'string') throw new Error('no html');
+  });
+}
+S.data = back;
 for (const [name, fn] of Object.entries(pages)) {
   check(`page ${name} renders`, () => {
     if (typeof fn() !== 'string') throw new Error('no html');
@@ -149,6 +162,42 @@ check('search for a comment', () => {
 });
 check('search with no query', () => {
   if (searchAll('').tasks.length) throw new Error('should be empty');
+});
+
+console.log('\nSaves wait for the store');
+const settle = () => new Promise(r => setTimeout(r, 250));
+const syncs = () => calls.filter(c => c.url.endsWith('/sync'));
+async function checkAsync(name, fn) {
+  try {
+    await fn();
+    ok(name);
+  } catch (err) {
+    bad(name, err.message);
+  }
+}
+await checkAsync('save() before the store loads does not POST /sync', async () => {
+  storeModule.save();
+  await settle();
+  if (syncs().length) throw new Error(`${syncs().length} sync posts`);
+});
+await checkAsync('a failed /store load keeps saves blocked', async () => {
+  if (typeof storeModule.loadStore !== 'function') throw new Error('no loadStore export');
+  if ((await storeModule.loadStore()) !== false) throw new Error('load reported success');
+  storeModule.save();
+  await settle();
+  if (syncs().length) throw new Error(`${syncs().length} sync posts`);
+});
+await checkAsync('after /store loads, save() posts /sync with the passphrase', async () => {
+  localStorage.setItem('gr8r.passphrase', 'pw');
+  storeReply = { ok: true, status: 200, json: () => Promise.resolve(back) };
+  if ((await storeModule.loadStore()) !== true) throw new Error('load failed');
+  storeModule.save();
+  await settle();
+  if (syncs().length !== 1) throw new Error(`${syncs().length} sync posts`);
+  if (syncs()[0].opt.headers['x-gr8r-passphrase'] !== 'pw') throw new Error('no passphrase header');
+});
+check('the page no longer keeps board data in localStorage', () => {
+  if ('data' in JSON.parse(localStorage.getItem(storeModule.STORE_KEY) || '{}')) throw new Error('data cached');
 });
 
 console.log(failed ? `\n${failed} failed\n` : '\nall checks passed\n');

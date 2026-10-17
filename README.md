@@ -6,7 +6,7 @@ board / list / table / calendar / timeline / files views, members, teams, activi
 Built with plain JavaScript ES modules and CSS, bundled by [Vite](https://vite.dev). There is no
 UI framework and no runtime dependency.
 
-This fork is the working repo. Mail, login, access requests, and billing are removed. Notifications are firstmate signals. The store is `gr8r-axi/`. See `gr8r-axi/AGENT-README.md`.
+This fork is the working repo. Mail, login, access requests, and billing are removed. Notifications are firstmate signals. The store is `gr8r-axi/`. See `gr8r-axi/AGENT-README.md`. To run the studio with the bridge, and for who can reach the bridge, see `DOCKER.md`.
 
 ![Gr8r Studio home dashboard](docs/preview.png)
 
@@ -30,7 +30,7 @@ index.html              HTML entry; loads src/main.js
 public/favicon.svg      brand mark
 vite.config.js          Vite config, including the Lucide icon-subset plugin
 eslint.config.js        lint rules (ESLint flat config); formatting by Prettier (.prettierrc.json)
-.github/workflows/      CI: lint, format check, build
+.github/workflows/      CI: lint, format check, store check, AXI and bridge tests, build
 docs/preview.png        README screenshot
 src/
   main.js               entry: imports styles and modules, then boots the app
@@ -41,7 +41,6 @@ src/
     views/              list, board, table, calendar, timeline, projects & files
     pages/              settings, auth & onboarding
   core/                 utilities, constants, icons, store (state + lookups), theme
-  data/seed.js          demo workspace data
   ui/                   shared render helpers, toasts, the select dropdown
   shell/                render loop and router, sidebar/topbar layout, skeletons, view engine
   components/           task list renderer
