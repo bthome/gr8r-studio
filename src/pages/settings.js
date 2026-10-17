@@ -2,7 +2,7 @@
    SETTINGS · AUTH · ONBOARDING · DESIGN SYSTEM · SYSTEM STATES
    ===================================================================== */
 import { dOff, esc, fmtDate } from '../core/utils.js';
-import { ic, wsLogo } from '../core/icons.js';
+import { ic } from '../core/icons.js';
 import { D, S, me } from '../core/store.js';
 import { av, pIcon } from '../ui/helpers.js';
 import { permsTable, teamsGrid } from './members.js';
@@ -65,23 +65,12 @@ export function pageSettings() {
 export function settingsBody(sec, title) {
   const P = S.prefs;
   const d = D();
-  const np = d.notifPrefs;
   const H = lead => `<h1>${title}</h1><p class="lead">${lead}</p>`;
   switch (sec) {
     case 'files':
       return (
         H('The folder where mate files are kept.') +
         `<div class="sblock"><div class="field" style="max-width:520px"><label class="label" for="files-path">Folder</label><input class="input" id="files-path" value="${esc(d.filesPath || '')}" placeholder="/Users/you/gr8r-files"></div><button class="btn btn-primary" data-a="saveFilesPath" style="margin-top:12px">Save path</button></div>`
-      );
-      return (
-        H('Your workspace name, address, and identity.') +
-        `
-      <form data-submit="saveWorkspace">
-      <div class="sblock" style="margin-top:0"><div class="row" style="gap:14px;margin-bottom:18px">${wsLogo(d.ws, 52)}<div><div class="label" style="margin-bottom:6px">Workspace icon</div><div class="swatches">${['#2F2E2A', '#5A67D8', '#3B82C4', '#23918A', '#C54B78', '#C48A1E'].map(c => `<button type="button" class="sw ${d.ws.c === c ? 'on' : ''}" style="--c:${c};width:22px;height:22px" data-a="wsColor" data-v="${c}" aria-label="Color ${c}"></button>`).join('')}</div></div></div>
-      <div class="col" style="gap:14px;max-width:440px"><div class="field"><label class="label" for="ws-name">Workspace name</label><input class="input" id="ws-name" value="${esc(d.ws.name)}"></div>
-      <div class="field"><label class="label" for="ws-url">Workspace URL</label><div class="row" style="gap:0"><span class="input" style="width:auto;background:var(--surface-2);border-right:0;border-radius:6px 0 0 6px;display:flex;align-items:center;color:var(--text-2)">gr8rstudio.com/</span><input class="input" id="ws-url" value="${esc(d.ws.url)}" style="border-radius:0 6px 6px 0"></div><span class="hint">Changing the URL will break existing links.</span></div>
-      <div><button class="btn btn-primary" data-a="saveWorkspace" id="ws-save">Save changes</button></div></div></div></form>
-      <div class="sblock"><h2 style="color:var(--red)">Danger zone</h2>${srow('Delete workspace', 'Permanently delete this workspace, its projects, tasks, and files. This cannot be undone.', `<button class="btn btn-danger-ghost" style="border:1px solid color-mix(in srgb,var(--red) 35%,transparent)" data-a="delWorkspace">Delete workspace</button>`)}</div>`
       );
     case 'appearance':
       return (

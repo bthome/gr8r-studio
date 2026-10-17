@@ -1,9 +1,9 @@
 /* ---------------- MODALS ---------------- */
-import { $$, MOD, ago, esc, fmtDate } from '../core/utils.js';
+import { $$, MOD, esc, fmtDate } from '../core/utils.js';
 import { ic } from '../core/icons.js';
 import { PCOLORS, PICONS } from '../core/constants.js';
 import { D, S, mem, pColor, proj, task, teamsList } from '../core/store.js';
-import { FT, av, filePrev, lbl, prPill, stPill } from '../ui/helpers.js';
+import { FT, av, lbl, prPill, stPill } from '../ui/helpers.js';
 import { focusKey, render } from '../shell/render.js';
 import { teamModal } from '../features/teams.js';
 

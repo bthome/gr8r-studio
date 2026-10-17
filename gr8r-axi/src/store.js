@@ -198,7 +198,6 @@ export class Store {
   }
 
   sync(doc) {
-    const as = doc.me || 'm1';
     return tx(this.db, () => {
       for (const m of doc.members || []) {
         this.db.prepare(`INSERT INTO members (id, name, email, role, team) VALUES (?, ?, ?, ?, ?)
@@ -217,7 +216,7 @@ export class Store {
         this.db.prepare('DELETE FROM project_members WHERE project = ?').run(p.id);
         for (const mid of p.members || []) this.db.prepare('INSERT OR IGNORE INTO project_members (project, member) VALUES (?, ?)').run(p.id, mid);
         this.db.prepare('DELETE FROM milestones WHERE project = ?').run(p.id);
-        (p.milestones || []).forEach((ms, i) => this.db.prepare('INSERT INTO milestones (id, project, name, date) VALUES (?, ?, ?, ?)').run(ms.id || id('ms'), p.id, ms.name, ms.date));
+        (p.milestones || []).forEach(ms => this.db.prepare('INSERT INTO milestones (id, project, name, date) VALUES (?, ?, ?, ?)').run(ms.id || id('ms'), p.id, ms.name, ms.date));
       }
       const seenT = new Set();
       for (const t of doc.tasks || []) {
