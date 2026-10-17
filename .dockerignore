@@ -3,3 +3,5 @@ gr8r-axi/node_modules
 gr8r-axi/*.db
 dist
 .DS_Store
+gr8r-axi/backups
+gr8r-axi/exports
