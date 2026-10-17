@@ -44,6 +44,32 @@ function send(port, { method = 'GET', path = '/store', headers = {}, body, host 
   });
 }
 
+// The bridge answers 413 and closes while a client may still be writing. Write in small steps and stop once a reply
+// arrives, so the reply is read before a write can fail. A write error after that is expected; only the status counts.
+function sendOversized(port, { chunked = false } = {}) {
+  const body = Buffer.from('{"x":"' + 'a'.repeat(6 * 1024 * 1024) + '"}');
+  const head = ['POST /sync HTTP/1.1', `Host: 127.0.0.1:${port}`, `Origin: ${STUDIO}`, 'Content-Type: application/json'];
+  head.push(chunked ? 'Transfer-Encoding: chunked' : `Content-Length: ${body.length}`);
+  return new Promise(resolve => {
+    let text = '';
+    const sock = connect(port, '127.0.0.1');
+    sock.setTimeout(5000, () => sock.destroy());
+    sock.on('data', c => (text += c));
+    sock.on('error', () => {});
+    sock.on('close', () => resolve({ status: Number(/^HTTP\/1\.1 (\d{3})/.exec(text)?.[1]) || undefined }));
+    sock.on('connect', async () => {
+      const step = () => new Promise(r => setTimeout(r, 1));
+      sock.write(head.join('\r\n') + '\r\n\r\n');
+      for (let i = 0; i < body.length && !text && !sock.destroyed; i += 64 * 1024) {
+        await step();
+        const piece = body.subarray(i, i + 64 * 1024);
+        sock.write(chunked ? Buffer.concat([Buffer.from(piece.length.toString(16) + '\r\n'), piece, Buffer.from('\r\n')]) : piece);
+      }
+      if (!text && !sock.destroyed) sock.end(chunked ? '0\r\n\r\n' : '');
+    });
+  });
+}
+
 function setup() {
   const dir = mkdtempSync(join(tmpdir(), 'gr8r-bridge-'));
   const env = { ...process.env, GR8R_DB: join(dir, 'gr8r.db') };
@@ -110,14 +136,8 @@ await check('a request with no host header gets 403', async () => {
 await check('text/plain POST gets 415', async () =>
   expect((await send(p, { method: 'POST', path: '/sync', headers: { origin: STUDIO, 'content-type': 'text/plain' }, body: '{}' })).status, 415),
 );
-await check('an oversized body gets 413', async () => {
-  const body = '{"x":"' + 'a'.repeat(6 * 1024 * 1024) + '"}';
-  expect((await send(p, { method: 'POST', path: '/sync', headers: { ...json, 'content-length': Buffer.byteLength(body) }, body })).status, 413);
-});
-await check('an oversized chunked body gets 413', async () => {
-  const body = '{"x":"' + 'a'.repeat(6 * 1024 * 1024) + '"}';
-  expect((await send(p, { method: 'POST', path: '/sync', headers: { ...json, 'transfer-encoding': 'chunked' }, body })).status, 413);
-});
+await check('an oversized body gets 413', async () => expect((await sendOversized(p)).status, 413));
+await check('an oversized chunked body gets 413', async () => expect((await sendOversized(p, { chunked: true })).status, 413));
 await check('a JSON POST /sync still works', async () => {
   const doc = JSON.parse((await send(p)).text);
   expect((await send(p, { method: 'POST', path: '/sync', headers: json, body: JSON.stringify(doc) })).status, 200);
