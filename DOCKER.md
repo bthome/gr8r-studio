@@ -6,7 +6,7 @@ This runs the studio and the AXI bridge in one container. The page posts every e
 docker compose up --build
 ```
 
-Open http://localhost:5173. The bridge is on http://localhost:8787/store. Data persists in the `gr8r-data` volume, so a restart keeps what you typed.
+Open http://localhost:5173. The bridge is on http://localhost:8787/store. Data persists in the `gr8r-data` volume, so a restart keeps what you typed. Compose prefixes the volume with the project name, so `docker volume ls` shows it as `gr8r-studio_gr8r-data`.
 
 ## Who can reach the bridge
 
@@ -22,7 +22,7 @@ The page loads the board from `GET /store` before it saves anything. If the brid
 
 ## Health
 
-`GET /health` answers `{"ok":true,"db":"ok","uptimeSec":…,"version":"…"}` with 200 when the database answers, and 503 with `ok:false` when it does not (for example the database file was deleted or swapped). It returns no board data and does not need the passphrase. The Host and origin checks still apply. The image has a `HEALTHCHECK` that calls it every 30 seconds, so `docker ps` shows `healthy` or `unhealthy`. Docker only reports the state; `restart: unless-stopped` does not restart an unhealthy container.
+`GET /health` answers `{"ok":true,"db":"ok","uptimeSec":…,"version":"…"}` with 200 when the database answers, and 503 with `ok:false` when it does not (for example the database file was deleted or swapped). It returns no board data and does not need the passphrase. The Host and origin checks still apply. The image has a `HEALTHCHECK` that calls it every 30 seconds, so `docker ps` shows `healthy` or `unhealthy`. Docker only reports the state; `restart: unless-stopped` does not restart an unhealthy container. If the bridge or the Studio process exits, the container exits too, and the restart policy brings it back.
 
 ## Backups and exports
 
@@ -42,7 +42,7 @@ docker compose exec studio node gr8r-axi/bin/gr8r-axi.js export           # ever
 To copy the latest backup or export out of the container:
 
 ```bash
-latest=$(docker compose exec -T studio node gr8r-axi/bin/gr8r-axi.js backup --list --json | node -e "process.stdin.on('data', d => console.log(JSON.parse(d)[0].file))")
+latest=$(docker compose exec -T studio node gr8r-axi/bin/gr8r-axi.js backup --list | head -n 1 | awk '{print $3}')
 docker compose cp "studio:$latest" ./
 docker compose cp studio:/data/exports ./gr8r-exports
 ```
@@ -55,7 +55,7 @@ docker compose run --rm --no-deps studio node gr8r-axi/bin/gr8r-axi.js restore /
 docker compose start studio
 ```
 
-Restore checks that the file is a readable SQLite database with the board tables, saves the current database as a `-pre-restore` backup (restore that file to undo), and swaps the file in. It refuses while the bridge appears to be running on that database: the bridge keeps a `gr8r.db.bridge` lock file next to the database and touches it every 10 seconds. If the container was killed, the lock goes stale after 30 seconds. Pass `--force` only if you are sure the bridge is stopped.
+Restore checks that the file is a readable SQLite database with the board tables, saves the current database as a `-pre-restore` backup (restore that file to undo), and swaps the file in. It refuses while the bridge appears to be running on that database: the bridge keeps a `gr8r.db.bridge` lock file next to the database and touches it every 10 seconds. `docker compose stop` shuts the bridge down cleanly and removes the lock. If the container was killed instead, the lock goes stale after 30 seconds. Pass `--force` only if you are sure the bridge is stopped.
 
 | Variable           | Default                         | Meaning                                    |
 | ------------------ | ------------------------------- | ------------------------------------------ |
