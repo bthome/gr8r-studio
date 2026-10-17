@@ -4,7 +4,9 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 
 export class Store {
-  constructor(db) { this.db = db; }
+  constructor(db) {
+    this.db = db;
+  }
 
   actor(as) {
     const m = this.db.prepare('SELECT * FROM members WHERE id = ?').get(as);
@@ -48,8 +50,12 @@ export class Store {
       this.can(actor, p.id);
       const taskId = id('t');
       const now = Date.now();
-      this.db.prepare(`INSERT INTO tasks (id, key, project, title, status, assignee, priority, fm_task, created, updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(taskId, key, p.id, title, status, assignee, priority, fmTask, now, now);
+      this.db
+        .prepare(
+          `INSERT INTO tasks (id, key, project, title, status, assignee, priority, fm_task, created, updated)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(taskId, key, p.id, title, status, assignee, priority, fmTask, now, now);
       if (fmTask) this.out(fmTask, key, 'created');
       return { id: taskId, key, fm_task: fmTask, version: 1 };
     });
@@ -103,7 +109,11 @@ export class Store {
 
   listTasks(project) {
     return project
-      ? this.db.prepare('SELECT key, title, status, assignee, fm_task, version, archived FROM tasks WHERE project = (SELECT id FROM projects WHERE key = ? OR id = ?)').all(project, project)
+      ? this.db
+          .prepare(
+            'SELECT key, title, status, assignee, fm_task, version, archived FROM tasks WHERE project = (SELECT id FROM projects WHERE key = ? OR id = ?)',
+          )
+          .all(project, project)
       : this.db.prepare('SELECT key, title, status, assignee, fm_task, version, archived FROM tasks').all();
   }
 
@@ -145,7 +155,9 @@ export class Store {
     const stored = `${fileId} - ${label}${ext}`;
     const dest = join(root, stored);
     copyFileSync(path, dest);
-    this.db.prepare('INSERT INTO files (id, project, task, name, by, at, path) VALUES (?, ?, ?, ?, ?, ?, ?)').run(fileId, p.id, task, stored, actor.id, Date.now(), dest);
+    this.db
+      .prepare('INSERT INTO files (id, project, task, name, by, at, path) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(fileId, p.id, task, stored, actor.id, Date.now(), dest);
     return { id: fileId, name: stored, path: dest };
   }
 
@@ -157,7 +169,21 @@ export class Store {
 
   reset() {
     tx(this.db, () => {
-      for (const t of ['tasks', 'comments', 'files', 'events', 'notifs', 'views', 'activity', 'outbox', 'applied', 'project_members', 'projects', 'members', 'meta']) {
+      for (const t of [
+        'tasks',
+        'comments',
+        'files',
+        'events',
+        'notifs',
+        'views',
+        'activity',
+        'outbox',
+        'applied',
+        'project_members',
+        'projects',
+        'members',
+        'meta',
+      ]) {
         this.db.prepare(`DELETE FROM ${t}`).run();
       }
     });
@@ -200,76 +226,148 @@ export class Store {
   sync(doc) {
     return tx(this.db, () => {
       for (const m of doc.members || []) {
-        this.db.prepare(`INSERT INTO members (id, name, email, role, team) VALUES (?, ?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET name = excluded.name, email = excluded.email, role = excluded.role, team = excluded.team`)
+        this.db
+          .prepare(
+            `INSERT INTO members (id, name, email, role, team) VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET name = excluded.name, email = excluded.email, role = excluded.role, team = excluded.team`,
+          )
           .run(m.id, m.name, m.email || '', m.role || 'Member', m.team || null);
       }
       const seenP = new Set();
       for (const p of doc.projects || []) {
         seenP.add(p.id);
-        this.db.prepare(`INSERT INTO projects (id, key, name, status, lead, private, icon, color, fav, desc, due, start, team, archived)
+        this.db
+          .prepare(
+            `INSERT INTO projects (id, key, name, status, lead, private, icon, color, fav, desc, due, start, team, archived)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET key = excluded.key, name = excluded.name, status = excluded.status, lead = excluded.lead,
             private = excluded.private, icon = excluded.icon, color = excluded.color, fav = excluded.fav, desc = excluded.desc,
-            due = excluded.due, start = excluded.start, team = excluded.team, archived = excluded.archived, version = version + 1`)
-          .run(p.id, p.key, p.name, p.status || 'active', p.lead, p.private ? 1 : 0, p.icon || 'zap', p.color || 'amber', p.fav ? 1 : 0, p.desc || '', p.due || null, p.start || null, p.team || null, p.archived ? 1 : 0);
+            due = excluded.due, start = excluded.start, team = excluded.team, archived = excluded.archived, version = version + 1`,
+          )
+          .run(
+            p.id,
+            p.key,
+            p.name,
+            p.status || 'active',
+            p.lead,
+            p.private ? 1 : 0,
+            p.icon || 'zap',
+            p.color || 'amber',
+            p.fav ? 1 : 0,
+            p.desc || '',
+            p.due || null,
+            p.start || null,
+            p.team || null,
+            p.archived ? 1 : 0,
+          );
         this.db.prepare('DELETE FROM project_members WHERE project = ?').run(p.id);
         for (const mid of p.members || []) this.db.prepare('INSERT OR IGNORE INTO project_members (project, member) VALUES (?, ?)').run(p.id, mid);
         this.db.prepare('DELETE FROM milestones WHERE project = ?').run(p.id);
-        (p.milestones || []).forEach(ms => this.db.prepare('INSERT INTO milestones (id, project, name, date) VALUES (?, ?, ?, ?)').run(ms.id || id('ms'), p.id, ms.name, ms.date));
+        (p.milestones || []).forEach(ms =>
+          this.db.prepare('INSERT INTO milestones (id, project, name, date) VALUES (?, ?, ?, ?)').run(ms.id || id('ms'), p.id, ms.name, ms.date),
+        );
       }
       const seenT = new Set();
       for (const t of doc.tasks || []) {
         seenT.add(t.id);
         const prev = this.db.prepare('SELECT title, status, fm_task FROM tasks WHERE id = ?').get(t.id);
-        this.db.prepare(`INSERT INTO tasks (id, key, project, title, status, assignee, priority, due, labels, deps, desc, fm_task, start, fav, recur, estimate, completed_at, order_n, prev_status, archived, created, updated)
+        this.db
+          .prepare(
+            `INSERT INTO tasks (id, key, project, title, status, assignee, priority, due, labels, deps, desc, fm_task, start, fav, recur, estimate, completed_at, order_n, prev_status, archived, created, updated)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET key = excluded.key, title = excluded.title, status = excluded.status, assignee = excluded.assignee,
             priority = excluded.priority, due = excluded.due, labels = excluded.labels, deps = excluded.deps, desc = excluded.desc,
             start = excluded.start, fav = excluded.fav, recur = excluded.recur, estimate = excluded.estimate, completed_at = excluded.completed_at,
-            order_n = excluded.order_n, prev_status = excluded.prev_status, archived = excluded.archived, updated = excluded.updated, version = version + 1`)
-          .run(t.id, t.key, t.project, t.title, t.status, t.assignee, t.priority, t.due, JSON.stringify(t.labels || []), JSON.stringify(t.deps || []), t.desc || '', t.fm_task || null, t.start || null, t.fav ? 1 : 0, t.recur || null, t.estimate || null, t.completedAt || null, t.order || 0, t.prevStatus || null, t.archived ? 1 : 0, t.created || Date.now(), t.updated || Date.now());
+            order_n = excluded.order_n, prev_status = excluded.prev_status, archived = excluded.archived, updated = excluded.updated, version = version + 1`,
+          )
+          .run(
+            t.id,
+            t.key,
+            t.project,
+            t.title,
+            t.status,
+            t.assignee,
+            t.priority,
+            t.due,
+            JSON.stringify(t.labels || []),
+            JSON.stringify(t.deps || []),
+            t.desc || '',
+            t.fm_task || null,
+            t.start || null,
+            t.fav ? 1 : 0,
+            t.recur || null,
+            t.estimate || null,
+            t.completedAt || null,
+            t.order || 0,
+            t.prevStatus || null,
+            t.archived ? 1 : 0,
+            t.created || Date.now(),
+            t.updated || Date.now(),
+          );
         this.db.prepare('DELETE FROM subtasks WHERE task = ?').run(t.id);
-        (t.subtasks || []).forEach((s, i) => this.db.prepare('INSERT INTO subtasks (id, task, title, done, assignee, due, ord) VALUES (?, ?, ?, ?, ?, ?, ?)').run(s.id || id('s'), t.id, s.title, s.done ? 1 : 0, s.assignee || null, s.due || null, i));
+        (t.subtasks || []).forEach((s, i) =>
+          this.db
+            .prepare('INSERT INTO subtasks (id, task, title, done, assignee, due, ord) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .run(s.id || id('s'), t.id, s.title, s.done ? 1 : 0, s.assignee || null, s.due || null, i),
+        );
         const fm = t.fm_task || prev?.fm_task;
         if (fm && (!prev || prev.title !== t.title || prev.status !== t.status)) this.out(fm, t.key, prev ? 'updated' : 'created');
       }
       this.db.prepare('DELETE FROM comments').run();
-      for (const c of doc.comments || []) this.db.prepare('INSERT INTO comments (id, task, by, text, at) VALUES (?, ?, ?, ?, ?)').run(c.id, c.task, c.by, c.text, c.at);
+      for (const c of doc.comments || [])
+        this.db.prepare('INSERT INTO comments (id, task, by, text, at) VALUES (?, ?, ?, ?, ?)').run(c.id, c.task, c.by, c.text, c.at);
       this.db.prepare('DELETE FROM activity').run();
-      for (const a of (doc.activity || []).slice(0, 200)) this.db.prepare('INSERT INTO activity (id, task, project, verb, by, at) VALUES (?, ?, ?, ?, ?, ?)').run(a.id, a.task, a.project, a.verb, a.by, a.at);
-      this.db.prepare('INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v').run('recent', JSON.stringify((doc.recentSearches || []).slice(0, 5)));
+      for (const a of (doc.activity || []).slice(0, 200))
+        this.db.prepare('INSERT INTO activity (id, task, project, verb, by, at) VALUES (?, ?, ?, ?, ?, ?)').run(a.id, a.task, a.project, a.verb, a.by, a.at);
+      this.db
+        .prepare('INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v')
+        .run('recent', JSON.stringify((doc.recentSearches || []).slice(0, 5)));
       return this.document();
     });
   }
 
   document() {
     const members = this.db.prepare('SELECT * FROM members').all();
-    const projects = this.db.prepare('SELECT * FROM projects WHERE archived = 0').all().map(p => ({
-      ...p,
-      icon: p.icon || 'zap',
-      color: p.color || 'amber',
-      fav: !!p.fav,
-      private: !!p.private,
-      members: this.db.prepare('SELECT member FROM project_members WHERE project = ?').all(p.id).map(r => r.member),
-      desc: p.desc || '',
-      milestones: this.db.prepare('SELECT id, name, date FROM milestones WHERE project = ?').all(p.id),
-    }));
-    const tasks = this.db.prepare('SELECT * FROM tasks WHERE archived = 0').all().map(t => ({
-      ...t,
-      labels: JSON.parse(t.labels || '[]'),
-      deps: JSON.parse(t.deps || '[]'),
-      subtasks: this.db.prepare('SELECT id, title, done, assignee, due FROM subtasks WHERE task = ? ORDER BY ord').all(t.id).map(s => ({ ...s, done: !!s.done })),
-      attachments: this.db.prepare('SELECT id, name, by, at, path FROM files WHERE task = ?').all(t.id).map(f => ({ ...f, type: 'doc', size: '' })),
-      desc: t.desc || '',
-      fav: !!t.fav,
-      recur: t.recur || null,
-      start: t.start || null,
-      estimate: t.estimate || null,
-      completedAt: t.completed_at || null,
-      order: t.order_n || 0,
-      prevStatus: t.prev_status || null,
-    }));
+    const projects = this.db
+      .prepare('SELECT * FROM projects WHERE archived = 0')
+      .all()
+      .map(p => ({
+        ...p,
+        icon: p.icon || 'zap',
+        color: p.color || 'amber',
+        fav: !!p.fav,
+        private: !!p.private,
+        members: this.db
+          .prepare('SELECT member FROM project_members WHERE project = ?')
+          .all(p.id)
+          .map(r => r.member),
+        desc: p.desc || '',
+        milestones: this.db.prepare('SELECT id, name, date FROM milestones WHERE project = ?').all(p.id),
+      }));
+    const tasks = this.db
+      .prepare('SELECT * FROM tasks WHERE archived = 0')
+      .all()
+      .map(t => ({
+        ...t,
+        labels: JSON.parse(t.labels || '[]'),
+        deps: JSON.parse(t.deps || '[]'),
+        subtasks: this.db
+          .prepare('SELECT id, title, done, assignee, due FROM subtasks WHERE task = ? ORDER BY ord')
+          .all(t.id)
+          .map(s => ({ ...s, done: !!s.done })),
+        attachments: this.db
+          .prepare('SELECT id, name, by, at, path FROM files WHERE task = ?')
+          .all(t.id)
+          .map(f => ({ ...f, type: 'doc', size: '' })),
+        desc: t.desc || '',
+        fav: !!t.fav,
+        recur: t.recur || null,
+        start: t.start || null,
+        estimate: t.estimate || null,
+        completedAt: t.completed_at || null,
+        order: t.order_n || 0,
+        prevStatus: t.prev_status || null,
+      }));
     return {
       ws: { name: 'Fleet Board', url: 'fleet', c: '#1D1C1A', brand: true },
       me: 'm1',
@@ -279,11 +377,14 @@ export class Store {
       comments: this.db.prepare('SELECT * FROM comments').all(),
       activity: this.db.prepare('SELECT * FROM activity ORDER BY at DESC LIMIT 50').all(),
       notifs: this.db.prepare('SELECT * FROM notifs').all(),
-      files: this.db.prepare('SELECT * FROM files').all().map(f => ({
-        ...f,
-        type: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name) ? 'img' : /\.pdf$/i.test(f.name) ? 'pdf' : /\.(md|txt|doc)$/i.test(f.name) ? 'doc' : 'other',
-        size: '',
-      })),
+      files: this.db
+        .prepare('SELECT * FROM files')
+        .all()
+        .map(f => ({
+          ...f,
+          type: /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name) ? 'img' : /\.pdf$/i.test(f.name) ? 'pdf' : /\.(md|txt|doc)$/i.test(f.name) ? 'doc' : 'other',
+          size: '',
+        })),
       events: this.db.prepare('SELECT * FROM events').all(),
       projOrder: projects.map(p => p.id),
       savedViews: this.db.prepare('SELECT * FROM views').all(),

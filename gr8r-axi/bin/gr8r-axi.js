@@ -34,7 +34,18 @@ try {
   else if (cmd === 'vocab') out(sub ? { [sub]: CATALOG[sub] } : CATALOG);
   else if (cmd === 'task' && sub === 'list') out(store.listTasks(flags.project));
   else if (cmd === 'task' && sub === 'view') out(store.task(pos[0]));
-  else if (cmd === 'task' && sub === 'create') out(store.createTask({ as: flags.as, project: flags.project, title: flags.title, status: flags.status, assignee: flags.assignee, priority: flags.priority, fmTask: flags.fm_task }));
+  else if (cmd === 'task' && sub === 'create')
+    out(
+      store.createTask({
+        as: flags.as,
+        project: flags.project,
+        title: flags.title,
+        status: flags.status,
+        assignee: flags.assignee,
+        priority: flags.priority,
+        fmTask: flags.fm_task,
+      }),
+    );
   else if (cmd === 'task' && sub === 'update') {
     const set = {};
     if (flags.status != null) set.status = flags.status;
@@ -42,8 +53,7 @@ try {
     if (flags.assignee != null) set.assignee = flags.assignee;
     if (flags.fm_task != null) set.fmTask = flags.fm_task;
     out(store.updateTask({ as: flags.as, key: pos[0], set, expected: flags.version }));
-  }
-  else if (cmd === 'task' && sub === 'delete') out(store.deleteTask({ as: flags.as, key: pos[0] }));
+  } else if (cmd === 'task' && sub === 'delete') out(store.deleteTask({ as: flags.as, key: pos[0] }));
   else if (cmd === 'settings' && sub === 'set') out(store.setPath(flags.path));
   else if (cmd === 'settings' && sub === 'get') out({ 'files.path': store.fileRoot() });
   else if (cmd === 'file' && sub === 'add') out(store.addFile({ as: flags.as, project: flags.project, task: flags.task, path: flags.path, name: flags.name }));
@@ -60,7 +70,10 @@ try {
       res.setHeader('access-control-allow-origin', '*');
       res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
       res.setHeader('access-control-allow-headers', 'content-type');
-      if (req.method === 'OPTIONS') { res.end(); return; }
+      if (req.method === 'OPTIONS') {
+        res.end();
+        return;
+      }
       if (req.url === '/store') {
         res.setHeader('content-type', 'application/json');
         res.end(JSON.stringify(store.document()));
@@ -69,7 +82,11 @@ try {
       if (req.url.startsWith('/files/')) {
         const id = req.url.slice('/files/'.length);
         const row = db.prepare('SELECT path FROM files WHERE id = ?').get(id);
-        if (!row) { res.statusCode = 404; res.end('not found'); return; }
+        if (!row) {
+          res.statusCode = 404;
+          res.end('not found');
+          return;
+        }
         createReadStream(row.path).pipe(res);
         return;
       }

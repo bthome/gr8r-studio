@@ -27,12 +27,7 @@ export const SET_NAV = [
       ['permissions', 'Permissions', 'shield'],
     ],
   ],
-  [
-    'Notifications',
-    [
-      ['signals', 'Signals', 'bell'],
-    ],
-  ],
+  ['Notifications', [['signals', 'Signals', 'bell']]],
   [
     'Personal',
     [

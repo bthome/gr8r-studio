@@ -21,15 +21,15 @@ The captain uses Gr8r Studio. The first mate is the only liaison. Secondmates ow
 
 ## What was built
 
-| Path | Purpose |
-|---|---|
-| `src/catalog.js` | Status, priority, label, role. |
-| `src/db.js` | SQLite schema. WAL. UUID ids. |
-| `src/store.js` | Init, tasks, files, access, outbox, doctor, document. |
-| `bin/gr8r-axi.js` | CLI and `serve`. |
-| `skill/SKILL.md` | Mate instructions. |
-| `demo.sh` | Fill or clear, with a confirm. |
-| `test/smoke.js` | Key, catalog, document, outbox. |
+| Path              | Purpose                                               |
+| ----------------- | ----------------------------------------------------- |
+| `src/catalog.js`  | Status, priority, label, role.                        |
+| `src/db.js`       | SQLite schema. WAL. UUID ids.                         |
+| `src/store.js`    | Init, tasks, files, access, outbox, doctor, document. |
+| `bin/gr8r-axi.js` | CLI and `serve`.                                      |
+| `skill/SKILL.md`  | Mate instructions.                                    |
+| `demo.sh`         | Fill or clear, with a confirm.                        |
+| `test/smoke.js`   | Key, catalog, document, outbox.                       |
 
 Commands: `init`, `reset`, `vocab`, `task list/view/create/update/delete`, `file add/list`, `settings get/set`, `doctor`, `outbox`, `ack`, `serve`.
 

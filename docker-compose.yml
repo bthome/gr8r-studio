@@ -2,8 +2,8 @@ services:
   studio:
     build: .
     ports:
-      - "127.0.0.1:5173:5173"
-      - "127.0.0.1:8787:8787"
+      - '127.0.0.1:5173:5173'
+      - '127.0.0.1:8787:8787'
     volumes:
       - gr8r-data:/data
     restart: unless-stopped

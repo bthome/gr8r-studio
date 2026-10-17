@@ -23,5 +23,3 @@ npm run check
 ```
 
 The first command installs the database library. You only need it once. Each line is `ok` or `FAIL`. A non-zero exit means something broke. Docker does not need to be running.
-
-

@@ -93,7 +93,9 @@ export function save() {
     }
     const bridge = (localStorage.getItem('gr8r.bridge') || 'http://127.0.0.1:8787/store').replace(/\/store$/, '');
     fetch(bridge + '/sync', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(S.data) })
-      .then(r => { if (!r.ok) throw new Error(r.status); })
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+      })
       .catch(() => window.dispatchEvent(new CustomEvent('gr8r-sync-fail')));
   }, 150);
 }
