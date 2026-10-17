@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node bin/gr8r-axi.js serve",
-    "test": "node test/smoke.js"
+    "test": "node test/smoke.js && node test/bridge.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.6.0"
